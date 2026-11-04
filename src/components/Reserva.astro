@@ -1,0 +1,388 @@
+---
+import WhatsIcon from './WhatsIcon.astro';
+import { site, whatsappUrl } from '../data/site';
+
+const tipos = ['Tanto faz', '1 quarto', '2 quartos', '3 quartos'];
+---
+
+<section id="reservar" class="reserva">
+  <div class="wrap reserva__grid">
+    <div class="reserva__intro">
+      <h2>Reserve sua estadia</h2>
+      <p class="reserva__texto">
+        Escolha as datas e quantas pessoas vêm. Ao enviar, o WhatsApp abre com a mensagem pronta e respondemos com
+        disponibilidade e valores.
+      </p>
+      <div class="reserva__outros">
+        <p>Prefere falar direto?</p>
+        <p>
+          <a href={whatsappUrl} target="_blank" rel="noopener">WhatsApp {site.phoneDisplay}</a>
+        </p>
+        <p>
+          <a href={site.instagram} target="_blank" rel="noopener">Instagram {site.instagramHandle}</a>
+        </p>
+      </div>
+    </div>
+
+    <form class="agenda" id="agenda" novalidate>
+      <fieldset class="agenda__datas">
+        <legend class="sr-only">Datas da estadia</legend>
+        <label class="campo">
+          <span class="campo__rotulo">Entrada</span>
+          <input type="date" name="entrada" id="entrada" required />
+        </label>
+        <label class="campo">
+          <span class="campo__rotulo">Saída</span>
+          <input type="date" name="saida" id="saida" required />
+        </label>
+      </fieldset>
+      <p class="agenda__noites" id="noites" aria-live="polite">Escolha a entrada e a saída.</p>
+
+      <div class="agenda__linha">
+        <label class="campo">
+          <span class="campo__rotulo">Adultos</span>
+          <select name="adultos">
+            {Array.from({ length: 10 }, (_, i) => <option value={i + 1} selected={i === 1}>{i + 1}</option>)}
+          </select>
+        </label>
+        <label class="campo">
+          <span class="campo__rotulo">Crianças</span>
+          <select name="criancas">
+            {Array.from({ length: 9 }, (_, i) => <option value={i}>{i}</option>)}
+          </select>
+        </label>
+      </div>
+
+      <fieldset class="campo">
+        <legend class="campo__rotulo">Apartamento</legend>
+        <div class="pilulas">
+          {
+            tipos.map((t, i) => (
+              <label class="pilula">
+                <input type="radio" name="apto" value={t} checked={i === 0} />
+                <span>{t}</span>
+              </label>
+            ))
+          }
+        </div>
+      </fieldset>
+
+      <label class="campo">
+        <span class="campo__rotulo">Seu nome</span>
+        <input type="text" name="nome" autocomplete="name" placeholder="Como podemos te chamar?" />
+      </label>
+
+      <label class="campo">
+        <span class="campo__rotulo">Observações <span class="campo__opcional">(opcional)</span></span>
+        <textarea name="obs" rows="2" placeholder="Horário de chegada, alguma dúvida…"></textarea>
+      </label>
+
+      <p class="agenda__erro" id="erro" role="alert"></p>
+
+      <button type="submit" class="btn btn--solid agenda__enviar">
+        <WhatsIcon /> Enviar pelo WhatsApp
+      </button>
+
+      <details class="agenda__previa">
+        <summary>Ver a mensagem que será enviada</summary>
+        <pre id="previa"></pre>
+      </details>
+    </form>
+  </div>
+</section>
+
+<script>
+  const TELEFONE = '5551989078845';
+  const form = document.querySelector<HTMLFormElement>('#agenda')!;
+  const entrada = form.querySelector<HTMLInputElement>('#entrada')!;
+  const saida = form.querySelector<HTMLInputElement>('#saida')!;
+  const noites = document.querySelector<HTMLParagraphElement>('#noites')!;
+  const erro = document.querySelector<HTMLParagraphElement>('#erro')!;
+  const previa = document.querySelector<HTMLPreElement>('#previa')!;
+
+  const paraISO = (d: Date) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  const deISO = (s: string) => {
+    const [a, m, d] = s.split('-').map(Number);
+    return new Date(a, m - 1, d);
+  };
+  const somarDias = (d: Date, n: number) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
+  const formatar = (d: Date) => {
+    const semana = d.toLocaleDateString('pt-BR', { weekday: 'long' }).replace('-feira', '');
+    return `${semana}, ${d.toLocaleDateString('pt-BR')}`;
+  };
+  const plural = (n: number, um: string, varios: string) => `${n} ${n === 1 ? um : varios}`;
+
+  const hoje = new Date();
+  entrada.min = paraISO(hoje);
+  saida.min = paraISO(somarDias(hoje, 1));
+
+  function contarNoites(): number | null {
+    if (!entrada.value || !saida.value) return null;
+    const n = Math.round((deISO(saida.value).getTime() - deISO(entrada.value).getTime()) / 86400000);
+    return n > 0 ? n : null;
+  }
+
+  function montarMensagem(): string {
+    const dados = new FormData(form);
+    const adultos = Number(dados.get('adultos'));
+    const criancas = Number(dados.get('criancas'));
+    const nome = String(dados.get('nome') || '').trim();
+    const obs = String(dados.get('obs') || '').trim();
+    const n = contarNoites();
+
+    const linhas = ['Olá! Vim pelo site e gostaria de consultar disponibilidade no Lucília Residencial.', ''];
+    if (entrada.value) linhas.push(`📅 Entrada: ${formatar(deISO(entrada.value))}`);
+    if (saida.value) linhas.push(`📅 Saída: ${formatar(deISO(saida.value))}`);
+    if (n) linhas.push(`🌙 ${plural(n, 'noite', 'noites')}`);
+    let pessoas = plural(adultos, 'adulto', 'adultos');
+    if (criancas > 0) pessoas += ` e ${plural(criancas, 'criança', 'crianças')}`;
+    linhas.push(`👥 ${pessoas}`);
+    linhas.push(`🏠 Apartamento: ${dados.get('apto')}`);
+    if (nome) linhas.push(`🙋 Nome: ${nome}`);
+    if (obs) linhas.push(`📝 Obs.: ${obs}`);
+    return linhas.join('\n');
+  }
+
+  function atualizar() {
+    const n = contarNoites();
+    noites.textContent = n
+      ? `${plural(n, 'noite', 'noites')}, de ${deISO(entrada.value).toLocaleDateString('pt-BR')} a ${deISO(saida.value).toLocaleDateString('pt-BR')}`
+      : 'Escolha a entrada e a saída.';
+    noites.classList.toggle('agenda__noites--ok', Boolean(n));
+    previa.textContent = montarMensagem();
+  }
+
+  entrada.addEventListener('change', () => {
+    if (!entrada.value) return atualizar();
+    const minimaSaida = somarDias(deISO(entrada.value), 1);
+    saida.min = paraISO(minimaSaida);
+    if (!saida.value || deISO(saida.value) < minimaSaida) saida.value = paraISO(minimaSaida);
+    erro.textContent = '';
+    atualizar();
+  });
+  form.addEventListener('input', atualizar);
+  form.addEventListener('change', atualizar);
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    if (!entrada.value || !saida.value) {
+      erro.textContent = 'Escolha a data de entrada e a de saída.';
+      (entrada.value ? saida : entrada).focus();
+      return;
+    }
+    if (deISO(entrada.value) < deISO(paraISO(hoje))) {
+      erro.textContent = 'A data de entrada já passou. Escolha uma data a partir de hoje.';
+      entrada.focus();
+      return;
+    }
+    if (!contarNoites()) {
+      erro.textContent = 'A saída precisa ser depois da entrada.';
+      saida.focus();
+      return;
+    }
+    erro.textContent = '';
+    const link = document.createElement('a');
+    link.href = `https://wa.me/${TELEFONE}?text=${encodeURIComponent(montarMensagem())}`;
+    link.target = '_blank';
+    link.rel = 'noopener';
+    link.click();
+  });
+
+  atualizar();
+</script>
+
+<style>
+  .reserva {
+    background: var(--peach);
+    padding-block: clamp(4rem, 9vw, 6.5rem);
+  }
+  .reserva__grid {
+    display: grid;
+    gap: 2.5rem;
+    align-items: start;
+  }
+  .reserva h2 {
+    font-size: clamp(2.75rem, 7vw, 4.5rem);
+  }
+  .reserva__texto {
+    margin-top: 1rem;
+    font-size: 1.1875rem;
+    max-width: 30rem;
+  }
+  .reserva__outros {
+    margin-top: 2rem;
+    display: grid;
+    gap: 0.35rem;
+  }
+  .reserva__outros a {
+    font-weight: 700;
+  }
+  @media (min-width: 960px) {
+    .reserva__grid {
+      grid-template-columns: 1fr 1.1fr;
+      gap: 4rem;
+    }
+    .reserva__intro {
+      position: sticky;
+      top: 7rem;
+    }
+  }
+
+  .agenda {
+    display: grid;
+    gap: 1.25rem;
+    background: var(--paper);
+    border-radius: var(--radius-photo);
+    padding: clamp(1.25rem, 4vw, 2.25rem);
+    box-shadow: 0 2rem 3rem -2rem rgb(14 77 94 / 0.45);
+  }
+  fieldset {
+    border: 0;
+    margin: 0;
+    padding: 0;
+    min-width: 0;
+  }
+  .agenda__datas,
+  .agenda__linha {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.9rem;
+  }
+  .reserva__grid > *,
+  .agenda > *,
+  .campo {
+    min-width: 0;
+  }
+  .campo {
+    display: grid;
+    gap: 0.4rem;
+  }
+  .campo__rotulo {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--sea);
+    padding: 0;
+  }
+  .campo__opcional {
+    font-weight: 400;
+    color: var(--ink-soft);
+  }
+  .campo input:not([type="radio"]),
+  .campo select,
+  .campo textarea {
+    width: 100%;
+    min-width: 0;
+    min-height: 3rem;
+    padding: 0.65rem 0.85rem;
+    font: inherit;
+    font-size: 1rem;
+    color: var(--ink);
+    background: #fff;
+    border: 1.5px solid #c9dadf;
+    border-radius: 0.75rem;
+  }
+  .campo textarea {
+    resize: vertical;
+  }
+  .campo input:not([type="radio"]):focus-visible,
+  .campo select:focus-visible,
+  .campo textarea:focus-visible {
+    outline: 3px solid var(--hibisco);
+    outline-offset: 1px;
+    border-color: var(--sea);
+  }
+
+  .agenda__noites {
+    margin-top: -0.4rem;
+    font-size: 0.95rem;
+    color: var(--ink-soft);
+  }
+  .agenda__noites--ok {
+    color: var(--sea);
+    font-weight: 700;
+  }
+
+  .pilulas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .pilula {
+    position: relative;
+  }
+  .pilula input {
+    position: absolute;
+    inset: 0;
+    width: 1px;
+    height: 1px;
+    margin: 0;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .pilula span {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.6rem;
+    padding: 0.4rem 1rem;
+    border: 1.5px solid #c9dadf;
+    border-radius: 999px;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--sea);
+    transition: background-color 0.15s, color 0.15s, border-color 0.15s;
+  }
+  .pilula input:checked + span {
+    background: var(--sea);
+    border-color: var(--sea);
+    color: #fff;
+  }
+  .pilula input:focus-visible + span {
+    outline: 3px solid var(--hibisco);
+    outline-offset: 2px;
+  }
+
+  .agenda__erro {
+    color: #b3263f;
+    font-weight: 700;
+    font-size: 0.95rem;
+  }
+  .agenda__erro:empty {
+    display: none;
+  }
+  .agenda__enviar {
+    width: 100%;
+    min-height: 3.5rem;
+    font-size: 1.1rem;
+  }
+
+  .agenda__previa {
+    font-size: 0.9rem;
+    color: var(--ink-soft);
+  }
+  .agenda__previa summary {
+    cursor: pointer;
+    width: fit-content;
+  }
+  .agenda__previa pre {
+    margin: 0.75rem 0 0;
+    padding: 0.9rem 1rem;
+    background: #e7f7ee;
+    border-radius: 0.75rem 0.75rem 0.75rem 0.2rem;
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: var(--ink);
+    white-space: pre-wrap;
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+</style>
