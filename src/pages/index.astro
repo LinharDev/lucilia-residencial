@@ -247,7 +247,7 @@ const arredores = [
           </p>
         </div>
         <div class="arredores__grid">
-          <ul class="arredores__lista">
+          <ul class="hex-list arredores__lista">
             {
               arredores.map((a) => (
                 <li>
@@ -824,9 +824,8 @@ const arredores = [
     display: grid;
     gap: 1.5rem;
   }
-  .arredores__lista li {
-    padding-left: 1.25rem;
-    border-left: 3px solid var(--peach-deep);
+  .arredores__lista li::before {
+    top: 0.75em;
   }
   .arredores__lista h3 {
     margin-bottom: 0.25rem;
