@@ -1,0 +1,943 @@
+---
+import { Image, getImage } from 'astro:assets';
+import Base from '../layouts/Base.astro';
+import Logo from '../components/Logo.astro';
+import WhatsIcon from '../components/WhatsIcon.astro';
+import { site, whatsappUrl } from '../data/site';
+
+import fachada from '../assets/fotos/fachada-hibiscos.jpg';
+import praia from '../assets/fotos/praia-pinheira.jpg';
+import patio from '../assets/fotos/patio-residencial.jpg';
+import suculentas from '../assets/fotos/muro-suculentas.jpg';
+import escadas from '../assets/fotos/fachada-escadas.jpg';
+import hibiscos from '../assets/fotos/hibiscos-patio.jpg';
+import porDoSol from '../assets/fotos/por-do-sol-pinheira.jpg';
+import passarela from '../assets/fotos/passarela-praia.jpg';
+import entardecer from '../assets/fotos/entardecer-pinheira.jpg';
+
+const apartamentos = [
+  {
+    quartos: '1 quarto',
+    para: 'Para casal ou até 2 pessoas',
+    texto: 'Kitinete completa, com cozinha equipada, ar-condicionado e Wi-Fi. Boa para um fim de semana ou para trabalhar de casa perto do mar.',
+  },
+  {
+    quartos: '2 quartos',
+    para: 'Para famílias',
+    texto: 'Apartamento completo com cozinha, ar-condicionado, Wi-Fi e churrasqueira individual.',
+  },
+  {
+    quartos: '3 quartos',
+    para: 'Para famílias grandes e grupos de amigos',
+    texto: 'O maior apartamento do residencial: espaço para todo mundo, cozinha completa e churrasqueira individual.',
+  },
+];
+
+const fotos = [
+  { src: fachada, alt: 'Fachada do residencial, com portas de madeira numeradas e hibiscos rosa em primeiro plano' },
+  { src: praia, alt: 'Praia da Pinheira em dia de sol, com pedras na beira da água e o morro ao fundo' },
+  { src: patio, alt: 'Pátio interno com os prédios do residencial e garagem coberta' },
+  { src: suculentas, alt: 'Muro branco decorado com vasos de suculentas e plaquinhas escritas Paz, Amor e Paraíso' },
+  { src: escadas, alt: 'Escadas externas que levam aos apartamentos do andar de cima' },
+  { src: hibiscos, alt: 'Hibiscos floridos na entrada do residencial' },
+  { src: porDoSol, alt: 'Pôr do sol na areia da Praia da Pinheira' },
+  { src: passarela, alt: 'Passarela de madeira chegando à areia, com mar e ilhas ao fundo' },
+  { src: entardecer, alt: 'Entardecer cor-de-rosa na Praia da Pinheira' },
+];
+
+const fotosGaleria = await Promise.all(
+  fotos.map(async (f) => ({
+    ...f,
+    full: (await getImage({ src: f.src, width: Math.min(f.src.width, 1400), format: 'webp' })).src,
+  })),
+);
+
+const arredores = [
+  { nome: 'Praia da Pinheira', texto: 'A 250 metros. Baía de mar calmo, boa para criança e para caminhar na areia no fim da tarde.' },
+  { nome: 'Praia do Sonho', texto: 'Vizinha da Pinheira, com areia clara e mar tranquilo.' },
+  { nome: 'Ponta do Papagaio', texto: 'Praia pequena, cercada de mata e com água clara.' },
+  { nome: 'Guarda do Embaú', texto: 'Onde o rio encontra o mar. Famosa pelo surfe e pelas trilhas.' },
+  { nome: 'Praia de Cima', texto: 'Mar aberto e areia extensa, para quem quer mais espaço.' },
+];
+---
+
+<Base>
+  <header class="topo">
+    <div class="wrap topo__inner">
+      <a href="/" class="topo__logo" aria-label="Lucília Residencial, início"><Logo /></a>
+      <nav aria-label="Seções">
+        <ul class="topo__nav">
+          <li><a href="#apartamentos">Apartamentos</a></li>
+          <li><a href="#fotos">Fotos</a></li>
+          <li><a href="#como-chegar">Como chegar</a></li>
+        </ul>
+      </nav>
+      <a class="btn btn--solid topo__cta" href={whatsappUrl} target="_blank" rel="noopener">
+        <WhatsIcon /> Reservar
+      </a>
+    </div>
+  </header>
+
+  <main id="conteudo">
+    <!-- HERO: o caminho de 250 m entre a porta e o mar -->
+    <section class="hero">
+      <div class="wrap hero__grid">
+        <div class="hero__texto">
+          <h1>Da sua porta até o mar são 250&nbsp;metros.</h1>
+          <p class="lede">
+            Apartamentos por temporada de 1, 2 e 3 quartos na Praia da Pinheira, em Palhoça (SC). Aberto o ano todo.
+          </p>
+          <div class="hero__acoes">
+            <a class="btn btn--solid" href={whatsappUrl} target="_blank" rel="noopener">
+              <WhatsIcon /> Reservar pelo WhatsApp
+            </a>
+            <a class="btn btn--ghost" href="#apartamentos">Ver apartamentos</a>
+          </div>
+        </div>
+
+        <figure class="caminho" aria-label="Do residencial até a Praia da Pinheira: cerca de 3 minutos a pé">
+          <Image
+            class="caminho__casa"
+            src={fachada}
+            alt="Fachada do Lucília Residencial com hibiscos rosa"
+            widths={[360, 560, 800]}
+            sizes="(min-width: 960px) 30vw, 56vw"
+            loading="eager"
+            fetchpriority="high"
+          />
+          <Image
+            class="caminho__mar"
+            src={praia}
+            alt="Praia da Pinheira em dia de sol"
+            widths={[360, 560, 800]}
+            sizes="(min-width: 960px) 32vw, 60vw"
+            loading="eager"
+          />
+          <svg class="caminho__trilha" viewBox="0 0 500 600" aria-hidden="true">
+            <defs>
+              <mask id="desenho">
+                <path class="caminho__mascara" d="M282 128 C 430 118, 492 236, 418 338" />
+              </mask>
+            </defs>
+            <circle cx="282" cy="128" r="6" class="caminho__ponto" />
+            <path class="caminho__linha" d="M282 128 C 430 118, 492 236, 418 338" mask="url(#desenho)" />
+            <path class="caminho__seta" d="M408 326 l10 13 l6 -15" />
+          </svg>
+          <figcaption class="caminho__legenda">
+            <span class="caminho__metros">250 m</span>
+            <span class="caminho__tempo">cerca de 3 minutos a pé</span>
+          </figcaption>
+        </figure>
+      </div>
+
+      <div class="destaques-faixa">
+        <ul class="wrap hex-list destaques">
+          <li>Ar-condicionado em todas as unidades</li>
+          <li>Wi-Fi</li>
+          <li>Garagem coberta</li>
+          <li>Cozinha completa</li>
+          <li>Aberto o ano todo</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- APARTAMENTOS -->
+    <section id="apartamentos" class="secao aptos">
+      <div class="wrap">
+        <div class="secao__topo">
+          <h2>Apartamentos</h2>
+          <p class="lede">
+            Todas as unidades são completas: é só chegar com a mala. Escolha o tamanho certo para quem vem com você.
+          </p>
+        </div>
+
+        <ul class="aptos__lista">
+          {
+            apartamentos.map((a) => (
+              <li class="apto">
+                <h3 class="apto__quartos">{a.quartos}</h3>
+                <p class="apto__para">{a.para}</p>
+                <p class="apto__texto">{a.texto}</p>
+              </li>
+            ))
+          }
+        </ul>
+
+        <div class="aptos__nota">
+          <p>Valores e datas mudam conforme a temporada. Mande as suas datas e a gente responde rapidinho.</p>
+          <a class="btn btn--solid" href={whatsappUrl} target="_blank" rel="noopener">
+            <WhatsIcon /> Consultar datas e valores
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- O RESIDENCIAL -->
+    <section class="secao lugar">
+      <div class="wrap lugar__grid">
+        <div class="lugar__fotos">
+          <Image class="lugar__f1" src={patio} alt="Pátio interno do residencial com garagem coberta" widths={[480, 640]} sizes="(min-width: 960px) 34vw, 90vw" />
+          <Image class="lugar__f2" src={suculentas} alt="Muro decorado com suculentas e plaquinhas de praia" widths={[320, 480]} sizes="(min-width: 960px) 18vw, 45vw" />
+        </div>
+        <div class="lugar__texto">
+          <h2>Um residencial pequeno, com cara de casa de praia</h2>
+          <p>
+            O Lucília fica no sul de Palhoça, numa rua tranquila da Praia da Pinheira. São poucos apartamentos em volta de
+            um pátio de lajotas, com hibiscos, suculentas e garagem coberta para o carro.
+          </p>
+          <p>
+            É um lugar seguro e sossegado para as férias de verão com a família, para descansar fora de temporada ou para
+            trabalhar de casa com o mar a poucos passos.
+          </p>
+          <ul class="hex-list lugar__lista">
+            <li>Unidades com ar-condicionado e internet</li>
+            <li>Churrasqueira individual nos apartamentos de 2 e 3 quartos</li>
+            <li>Atendimento direto com os donos pelo WhatsApp</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- FOTOS -->
+    <section id="fotos" class="secao fotos">
+      <div class="wrap">
+        <div class="secao__topo">
+          <h2>Fotos</h2>
+          <p class="lede">
+            Mais fotos e vídeos no nosso Instagram,
+            <a href={site.instagram} target="_blank" rel="noopener">{site.instagramHandle}</a>.
+          </p>
+        </div>
+        <ul class="galeria">
+          {
+            fotosGaleria.map((f, i) => (
+              <li class={`galeria__item galeria__item--${i}`}>
+                <button type="button" class="galeria__btn" data-index={i} data-full={f.full} data-alt={f.alt}>
+                  <Image src={f.src} alt={f.alt} widths={[320, 520]} sizes="(min-width: 960px) 25vw, 50vw" />
+                  <span class="sr-only">Ampliar foto</span>
+                </button>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+
+      <dialog class="lightbox" aria-label="Foto ampliada">
+        <img class="lightbox__img" src={fotosGaleria[0].full} alt={fotosGaleria[0].alt} loading="lazy" />
+        <button type="button" class="lightbox__btn lightbox__fechar" aria-label="Fechar">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+        </button>
+        <button type="button" class="lightbox__btn lightbox__ant" aria-label="Foto anterior">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
+        </button>
+        <button type="button" class="lightbox__btn lightbox__prox" aria-label="Próxima foto">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg>
+        </button>
+      </dialog>
+    </section>
+
+    <!-- COMO CHEGAR / ARREDORES -->
+    <section id="como-chegar" class="secao arredores">
+      <div class="wrap">
+        <div class="secao__topo">
+          <h2>Praia da Pinheira e arredores</h2>
+          <p class="lede">
+            A Pinheira fica no sul de Palhoça, na Grande Florianópolis. Daqui dá para conhecer algumas das praias mais
+            bonitas de Santa Catarina sem pegar estrada longa.
+          </p>
+        </div>
+        <div class="arredores__grid">
+          <ul class="arredores__lista">
+            {
+              arredores.map((a) => (
+                <li>
+                  <h3>{a.nome}</h3>
+                  <p>{a.texto}</p>
+                </li>
+              ))
+            }
+          </ul>
+          <div class="arredores__mapa">
+            <iframe
+              title="Mapa da Praia da Pinheira, Palhoça (SC)"
+              src="https://maps.google.com/maps?q=Praia%20da%20Pinheira%2C%20Palho%C3%A7a%20-%20SC&z=14&output=embed"
+              loading="lazy"
+              referrerpolicy="no-referrer-when-downgrade"></iframe>
+            <p class="arredores__obs">O endereço exato é enviado junto com a confirmação da reserva.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- RESERVA -->
+    <section id="reservar" class="reserva">
+      <div class="wrap reserva__grid">
+        <div>
+          <h2>Reserve sua estadia</h2>
+          <p class="reserva__texto">
+            A agenda do verão 2026/2027 está aberta. Conte as datas e quantas pessoas vêm, e respondemos com
+            disponibilidade e valores.
+          </p>
+        </div>
+        <div class="reserva__contatos">
+          <a class="btn btn--solid reserva__btn" href={whatsappUrl} target="_blank" rel="noopener">
+            <WhatsIcon /> Chamar no WhatsApp
+          </a>
+          <p>
+            Ou ligue: <a href={`tel:${site.phoneE164}`}>{site.phoneDisplay}</a>
+          </p>
+          <p>
+            Instagram: <a href={site.instagram} target="_blank" rel="noopener">{site.instagramHandle}</a>
+          </p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="rodape">
+    <div class="wrap rodape__inner">
+      <Logo tone="light" />
+      <p>Praia da Pinheira, Palhoça (SC)</p>
+      <p class="rodape__copy">© {new Date().getFullYear()} Lucília Residencial</p>
+    </div>
+  </footer>
+
+  <a class="whats-flutuante" href={whatsappUrl} target="_blank" rel="noopener" aria-label="Reservar pelo WhatsApp">
+    <WhatsIcon />
+  </a>
+</Base>
+
+<script>
+  const dialog = document.querySelector<HTMLDialogElement>('.lightbox')!;
+  const img = dialog.querySelector<HTMLImageElement>('.lightbox__img')!;
+  const botoes = [...document.querySelectorAll<HTMLButtonElement>('.galeria__btn')];
+  let atual = 0;
+  let origem: HTMLButtonElement | null = null;
+
+  function mostrar(i: number) {
+    atual = (i + botoes.length) % botoes.length;
+    const b = botoes[atual];
+    img.src = b.dataset.full!;
+    img.alt = b.dataset.alt!;
+  }
+
+  botoes.forEach((b, i) =>
+    b.addEventListener('click', () => {
+      origem = b;
+      mostrar(i);
+      dialog.showModal();
+    }),
+  );
+  dialog.querySelector('.lightbox__fechar')!.addEventListener('click', () => dialog.close());
+  dialog.querySelector('.lightbox__ant')!.addEventListener('click', () => mostrar(atual - 1));
+  dialog.querySelector('.lightbox__prox')!.addEventListener('click', () => mostrar(atual + 1));
+  dialog.addEventListener('click', (e) => {
+    if (e.target === dialog) dialog.close();
+  });
+  dialog.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowLeft') mostrar(atual - 1);
+    if (e.key === 'ArrowRight') mostrar(atual + 1);
+  });
+  dialog.addEventListener('close', () => origem?.focus());
+</script>
+
+<style>
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  /* Topo */
+  .topo {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: rgb(255 255 255 / 0.92);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--peach-soft);
+  }
+  .topo__inner {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    min-height: 4.5rem;
+  }
+  .topo__logo {
+    text-decoration: none;
+    font-size: 1.05rem;
+  }
+  .topo nav {
+    margin-left: auto;
+  }
+  .topo__nav {
+    display: flex;
+    gap: 1.75rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .topo__nav a {
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 0.95rem;
+  }
+  .topo__nav a:hover {
+    text-decoration: underline;
+  }
+  .topo__cta {
+    min-height: 2.6rem;
+    padding: 0.5rem 1.1rem;
+  }
+  @media (max-width: 760px) {
+    .topo nav,
+    .topo__cta {
+      display: none;
+    }
+  }
+
+  /* Hero */
+  .hero {
+    padding-top: clamp(2rem, 6vw, 4.5rem);
+  }
+  .destaques-faixa {
+    margin-top: clamp(2.5rem, 6vw, 4rem);
+    background: var(--peach-soft);
+  }
+  .hero__grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+    align-items: center;
+  }
+  .hero h1 {
+    font-size: clamp(3rem, 8.5vw, 5.75rem);
+    line-height: 0.98;
+    max-width: 11ch;
+  }
+  .hero .lede {
+    margin-top: 1.5rem;
+  }
+  .hero__acoes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 2rem;
+  }
+  @media (min-width: 960px) {
+    .hero__grid {
+      grid-template-columns: 1fr 1fr;
+      gap: 3rem;
+    }
+  }
+
+  .caminho {
+    position: relative;
+    margin: 0;
+    width: 100%;
+    max-width: 34rem;
+    justify-self: center;
+    aspect-ratio: 5 / 6;
+  }
+  .caminho__casa,
+  .caminho__mar {
+    position: absolute;
+    object-fit: cover;
+    border-radius: var(--radius-photo);
+    box-shadow: 0 1.5rem 3rem -1.5rem rgb(14 77 94 / 0.45);
+  }
+  .caminho__casa {
+    left: 0;
+    top: 0;
+    width: 56%;
+    height: 58.3%;
+  }
+  .caminho__mar {
+    right: 0;
+    bottom: 0;
+    width: 60%;
+    height: 45%;
+  }
+  .caminho__trilha {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+  .caminho__ponto {
+    fill: var(--hibisco);
+  }
+  .caminho__linha {
+    fill: none;
+    stroke: var(--sea);
+    stroke-width: 4;
+    stroke-linecap: round;
+    stroke-dasharray: 0.1 12;
+  }
+  .caminho__seta {
+    fill: none;
+    stroke: var(--sea);
+    stroke-width: 3.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    animation: aparecer 0.3s ease-out 1.5s both;
+  }
+  .caminho__mascara {
+    fill: none;
+    stroke: #fff;
+    stroke-width: 14;
+    stroke-dasharray: 360;
+    stroke-dashoffset: 360;
+    animation: desenhar 1.4s cubic-bezier(0.6, 0, 0.3, 1) 0.35s forwards;
+  }
+  .caminho__legenda {
+    position: absolute;
+    left: 66%;
+    top: 34%;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    line-height: 1.1;
+    animation: aparecer 0.5s ease-out 1.2s both;
+  }
+  .caminho__metros {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-weight: 500;
+    font-size: clamp(2.2rem, 6vw, 3.4rem);
+    color: var(--sea);
+    background: var(--paper);
+    padding: 0 0.3rem;
+    border-radius: 0.4rem;
+  }
+  .caminho__tempo {
+    font-size: 0.82rem;
+    color: var(--ink-soft);
+    background: var(--paper);
+    padding: 0.1rem 0.35rem;
+    border-radius: 0.3rem;
+    white-space: nowrap;
+  }
+  @media (max-width: 520px) {
+    .caminho__legenda {
+      left: 60%;
+    }
+    .caminho__tempo {
+      white-space: normal;
+      max-width: 7.5rem;
+    }
+  }
+  @keyframes desenhar {
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+  @keyframes aparecer {
+    from {
+      opacity: 0;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .caminho__mascara {
+      animation: none;
+      stroke-dashoffset: 0;
+    }
+    .caminho__seta,
+    .caminho__legenda {
+      animation: none;
+    }
+  }
+
+  .destaques {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem 2.25rem;
+    padding-block: 1.75rem;
+    font-weight: 700;
+    color: var(--sea);
+  }
+
+  /* Seções */
+  .secao {
+    padding-block: clamp(4rem, 9vw, 7rem);
+  }
+  .secao__topo {
+    display: grid;
+    gap: 1rem;
+    margin-bottom: clamp(2rem, 5vw, 3.5rem);
+  }
+  @media (min-width: 960px) {
+    .secao__topo {
+      grid-template-columns: 1fr 1fr;
+      align-items: end;
+      gap: 3rem;
+    }
+  }
+
+  /* Apartamentos */
+  .aptos__lista {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top: 2px solid var(--sea);
+  }
+  .apto {
+    display: grid;
+    gap: 0.4rem 2rem;
+    padding: 1.75rem 0;
+    border-bottom: 1px solid var(--peach);
+  }
+  .apto__quartos {
+    font-size: clamp(2.5rem, 6vw, 3.75rem);
+    line-height: 1;
+  }
+  .apto__para {
+    font-weight: 700;
+    color: var(--sea);
+  }
+  .apto__texto {
+    color: var(--ink-soft);
+    max-width: 34rem;
+  }
+  @media (min-width: 760px) {
+    .apto {
+      grid-template-columns: 15rem 1fr;
+      align-items: baseline;
+    }
+    .apto__para,
+    .apto__texto {
+      grid-column: 2;
+    }
+    .apto__quartos {
+      grid-row: 1 / span 2;
+    }
+  }
+  .aptos__nota {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.25rem;
+    margin-top: 2.5rem;
+    padding: 1.5rem 1.75rem;
+    background: var(--sky);
+    border-radius: var(--radius-photo);
+  }
+  .aptos__nota p {
+    max-width: 30rem;
+  }
+
+  /* O residencial */
+  .lugar {
+    background: var(--peach-soft);
+  }
+  .lugar__grid {
+    display: grid;
+    gap: 3rem;
+    align-items: center;
+  }
+  .lugar__fotos {
+    position: relative;
+    padding-bottom: 18%;
+  }
+  .lugar__fotos img {
+    border-radius: var(--radius-photo);
+    object-fit: cover;
+  }
+  .lugar__f1 {
+    width: 82%;
+    aspect-ratio: 4 / 3;
+  }
+  .lugar__f2 {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 42%;
+    aspect-ratio: 3 / 4;
+    border: 6px solid var(--peach-soft);
+  }
+  .lugar__texto {
+    display: grid;
+    gap: 1.25rem;
+    max-width: 34rem;
+  }
+  .lugar__texto h2 {
+    margin-bottom: 0.5rem;
+  }
+  .lugar__lista {
+    display: grid;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+    font-weight: 700;
+    color: var(--sea);
+  }
+  @media (min-width: 960px) {
+    .lugar__grid {
+      grid-template-columns: 1.1fr 1fr;
+      gap: 5rem;
+    }
+  }
+
+  /* Galeria */
+  .galeria {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-auto-rows: 9rem;
+    grid-auto-flow: dense;
+    gap: 0.6rem;
+  }
+  .galeria__item {
+    grid-row: span 2;
+  }
+  .galeria__item--0,
+  .galeria__item--1 {
+    grid-row: span 3;
+  }
+  .galeria__btn {
+    display: block;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    border: 0;
+    background: var(--sky);
+    border-radius: 0.9rem;
+    overflow: hidden;
+    cursor: zoom-in;
+  }
+  .galeria__btn img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+  }
+  .galeria__btn:hover img {
+    transform: scale(1.03);
+  }
+  @media (min-width: 760px) {
+    .galeria {
+      grid-template-columns: repeat(4, 1fr);
+      grid-auto-rows: 8.5rem;
+    }
+    .galeria__item--0 {
+      grid-column: span 2;
+      grid-row: span 4;
+    }
+    .galeria__item--1 {
+      grid-column: span 2;
+      grid-row: span 3;
+    }
+  }
+
+  .lightbox {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    max-width: min(92vw, 70rem);
+    max-height: 92vh;
+    overflow: visible;
+  }
+  .lightbox::backdrop {
+    background: rgb(8 30 37 / 0.88);
+  }
+  .lightbox__img {
+    max-width: min(92vw, 70rem);
+    max-height: 84vh;
+    width: auto;
+    border-radius: 0.75rem;
+  }
+  .lightbox__btn {
+    position: absolute;
+    display: grid;
+    place-items: center;
+    width: 3rem;
+    height: 3rem;
+    border: 0;
+    border-radius: 50%;
+    background: #fff;
+    color: var(--sea);
+    cursor: pointer;
+  }
+  .lightbox__btn svg {
+    width: 1.4rem;
+    height: 1.4rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .lightbox__fechar {
+    top: -1rem;
+    right: -1rem;
+  }
+  .lightbox__ant,
+  .lightbox__prox {
+    top: 50%;
+    translate: 0 -50%;
+  }
+  .lightbox__ant {
+    left: -1.5rem;
+  }
+  .lightbox__prox {
+    right: -1.5rem;
+  }
+  @media (max-width: 760px) {
+    .lightbox__fechar {
+      top: auto;
+      bottom: -4rem;
+      right: 50%;
+      translate: 50% 0;
+    }
+    .lightbox__ant,
+    .lightbox__prox {
+      top: auto;
+      bottom: -4rem;
+      translate: none;
+    }
+    .lightbox__ant {
+      left: 0;
+    }
+    .lightbox__prox {
+      right: 0;
+    }
+  }
+
+  /* Arredores */
+  .arredores {
+    background: var(--sky);
+  }
+  .arredores__grid {
+    display: grid;
+    gap: 2.5rem;
+  }
+  .arredores__lista {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 1.5rem;
+  }
+  .arredores__lista li {
+    padding-left: 1.25rem;
+    border-left: 3px solid var(--peach-deep);
+  }
+  .arredores__lista h3 {
+    margin-bottom: 0.25rem;
+  }
+  .arredores__lista p {
+    color: var(--ink-soft);
+    max-width: 32rem;
+  }
+  .arredores__mapa iframe {
+    display: block;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    border: 0;
+    border-radius: var(--radius-photo);
+    background: #d4e7ec;
+  }
+  .arredores__obs {
+    margin-top: 0.75rem;
+    font-size: 0.9rem;
+    color: var(--ink-soft);
+  }
+  @media (min-width: 960px) {
+    .arredores__grid {
+      grid-template-columns: 1fr 1.2fr;
+      gap: 4rem;
+      align-items: start;
+    }
+  }
+
+  /* Reserva */
+  .reserva {
+    background: var(--peach);
+    padding-block: clamp(4rem, 9vw, 6.5rem);
+  }
+  .reserva__grid {
+    display: grid;
+    gap: 2rem;
+    align-items: center;
+  }
+  .reserva h2 {
+    font-size: clamp(2.75rem, 7vw, 4.5rem);
+  }
+  .reserva__texto {
+    margin-top: 1rem;
+    font-size: 1.1875rem;
+    max-width: 32rem;
+  }
+  .reserva__contatos {
+    display: grid;
+    gap: 0.75rem;
+    justify-items: start;
+  }
+  .reserva__contatos a:not(.btn) {
+    font-weight: 700;
+  }
+  .reserva__btn {
+    min-height: 3.5rem;
+    padding-inline: 1.75rem;
+    font-size: 1.1rem;
+  }
+  @media (min-width: 960px) {
+    .reserva__grid {
+      grid-template-columns: 1.4fr 1fr;
+    }
+  }
+
+  /* Rodapé */
+  .rodape {
+    background: var(--sea);
+    color: #fff;
+    padding-block: 2.5rem 6rem;
+  }
+  .rodape__inner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 1rem 2.5rem;
+  }
+  .rodape__copy {
+    margin-left: auto;
+    opacity: 0.75;
+    font-size: 0.9rem;
+  }
+  @media (min-width: 760px) {
+    .rodape {
+      padding-bottom: 2.5rem;
+    }
+  }
+
+  /* Botão flutuante (só no celular) */
+  .whats-flutuante {
+    position: fixed;
+    right: 1rem;
+    bottom: 1rem;
+    z-index: 30;
+    display: grid;
+    place-items: center;
+    width: 3.75rem;
+    height: 3.75rem;
+    border-radius: 50%;
+    background: #25d366;
+    color: #fff;
+    box-shadow: 0 0.75rem 1.5rem -0.5rem rgb(0 0 0 / 0.35);
+  }
+  .whats-flutuante svg {
+    width: 2rem;
+    height: 2rem;
+  }
+  @media (min-width: 761px) {
+    .whats-flutuante {
+      display: none;
+    }
+  }
+</style>

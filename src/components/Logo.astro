@@ -1,0 +1,61 @@
+---
+interface Props {
+  tone?: 'dark' | 'light';
+}
+const { tone = 'dark' } = Astro.props;
+---
+
+<span class:list={['logo', `logo--${tone}`]}>
+  <span class="logo__words">
+    <span class="logo__small">Residencial</span>
+    <span class="logo__name">Lucília</span>
+  </span>
+  <svg class="logo__mark" viewBox="0 0 64 40" aria-hidden="true">
+    <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.6">
+      <path d="M26 6 l2 5 M36 3 v6 M46 6 l-2 5 M54 12 l-5 3" />
+      <path d="M8 24 c8 -5 14 5 22 0 s14 -5 22 0 s8 3 10 1" />
+      <path d="M8 30 c8 -5 14 5 22 0 s14 -5 22 0" />
+    </g>
+    <g fill="currentColor">
+      <circle cx="12" cy="36" r="1.1" /><circle cx="18" cy="37" r="1.1" /><circle cx="24" cy="37.5" r="1.1" />
+      <circle cx="30" cy="37" r="1.1" /><circle cx="36" cy="36.5" r="1.1" /><circle cx="42" cy="37" r="1.1" />
+    </g>
+  </svg>
+</span>
+
+<style>
+  .logo {
+    display: inline-flex;
+    align-items: flex-end;
+    gap: 0.15rem;
+    line-height: 1;
+    color: var(--sea);
+  }
+  .logo--light {
+    color: #fff;
+  }
+  .logo__words {
+    display: flex;
+    flex-direction: column;
+  }
+  .logo__small {
+    font-family: var(--font-body);
+    font-size: 0.62em;
+    letter-spacing: 0.04em;
+    margin-left: 0.2em;
+  }
+  .logo__name {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 1.9em;
+    letter-spacing: -0.01em;
+  }
+  .logo__mark {
+    width: 2.4em;
+    margin-bottom: 0.25em;
+    color: var(--peach-deep);
+  }
+  .logo--light .logo__mark {
+    color: var(--peach);
+  }
+</style>
