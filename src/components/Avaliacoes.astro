@@ -1,154 +1,74 @@
 ---
 import { site } from '../data/site';
+
+// Avaliações publicadas no perfil do Google Maps (copiadas em nov/2026).
+// Para atualizar, edite esta lista e o resumo abaixo.
+const resumo = { nota: '5,0', total: 4 };
+const avaliacoes = [
+  {
+    autor: 'Mariele S.',
+    quando: 'abr. 2026',
+    texto:
+      'Ótimo lugar e localização, apartamento completo, organizado e limpo. Local tranquilo e a anfitriã muita atenciosa, com certeza iremos voltar!',
+  },
+  {
+    autor: 'Luciana S.',
+    quando: '2025',
+    texto:
+      'Ótimo lugar, organizado, tranquilo, completo. Fiquei nos últimos 2 verões e pretendo ir no próximo o ano que vem!',
+  },
+  {
+    autor: 'Alana L.',
+    quando: '2024',
+    texto: 'Local super aconchegante perto da praia, recepção incrível! Apartamentos grandes e completos',
+  },
+];
 ---
 
-<section id="avaliacoes" class="secao avaliacoes" data-maps={site.mapsUrl}>
+<section id="avaliacoes" class="secao avaliacoes">
   <div class="wrap avaliacoes__grid">
     <div class="resumo">
       <h2>O que dizem os hóspedes</h2>
-      <div class="resumo__nota" data-estado="carregando">
-        <span class="resumo__numero" data-nota>–</span>
+      <div class="resumo__nota">
+        <span class="resumo__numero">{resumo.nota}</span>
         <div>
-          <span class="estrelas" data-estrelas aria-hidden="true"></span>
-          <p class="resumo__total" data-total>Carregando avaliações do Google…</p>
+          <span class="estrelas" aria-hidden="true">★★★★★</span>
+          <p class="resumo__total">
+            <span class="sr-only">Nota {resumo.nota} de 5, </span>{resumo.total} avaliações no Google
+          </p>
         </div>
       </div>
       <div class="resumo__acoes">
-        <a class="btn btn--solid" data-ver href={site.mapsUrl} target="_blank" rel="noopener">Ver no Google Maps</a>
-        <a class="btn btn--ghost" data-avaliar href={site.mapsUrl} target="_blank" rel="noopener">Deixar uma avaliação</a>
+        <a class="btn btn--solid" href={site.mapsUrl} target="_blank" rel="noopener">Ver no Google Maps</a>
+        <a class="btn btn--ghost" href={site.mapsUrl} target="_blank" rel="noopener">Deixar uma avaliação</a>
       </div>
-      <p class="resumo__fonte">Nota e avaliações atualizadas automaticamente a partir do Google Maps.</p>
     </div>
 
-    <ul class="cartoes" data-cartoes aria-live="polite">
-      <li class="cartao cartao--esqueleto" aria-hidden="true"><span></span><span></span><span></span></li>
-      <li class="cartao cartao--esqueleto" aria-hidden="true"><span></span><span></span><span></span></li>
+    <ul class="cartoes">
+      {
+        avaliacoes.map((a) => (
+          <li class="cartao">
+            <blockquote class="cartao__texto">{a.texto}</blockquote>
+            <div class="cartao__rodape">
+              <span class="cartao__foto" aria-hidden="true">
+                {a.autor.charAt(0)}
+              </span>
+              <div>
+                <p class="cartao__autor">{a.autor}</p>
+                <p class="cartao__quando">
+                  <span class="estrelas estrelas--p" aria-label="5 estrelas">
+                    ★★★★★
+                  </span>{' '}
+                  no Google, {a.quando}
+                </p>
+              </div>
+            </div>
+          </li>
+        ))
+      }
     </ul>
   </div>
 </section>
-
-<script>
-  type Avaliacao = {
-    autor: string;
-    foto: string | null;
-    perfil: string | null;
-    nota: number;
-    quando: string;
-    texto: string;
-    link: string | null;
-  };
-  type Resposta = {
-    configurado: boolean;
-    erro?: boolean;
-    nota?: number | null;
-    total?: number;
-    mapsUrl?: string;
-    avaliarUrl?: string | null;
-    avaliacoes?: Avaliacao[];
-  };
-
-  const secao = document.querySelector<HTMLElement>('#avaliacoes')!;
-  const lista = secao.querySelector<HTMLUListElement>('[data-cartoes]')!;
-  const caixaNota = secao.querySelector<HTMLElement>('.resumo__nota')!;
-
-  const el = <K extends keyof HTMLElementTagNameMap>(tag: K, classe?: string, texto?: string) => {
-    const e = document.createElement(tag);
-    if (classe) e.className = classe;
-    if (texto) e.textContent = texto;
-    return e;
-  };
-  const estrelas = (nota: number) => '★★★★★'.slice(0, Math.round(nota)) + '☆☆☆☆☆'.slice(0, 5 - Math.round(nota));
-
-  function cartao(a: Avaliacao) {
-    const li = el('li', 'cartao');
-    const topo = el('div', 'cartao__topo');
-    if (a.foto) {
-      const img = el('img', 'cartao__foto');
-      img.src = a.foto;
-      img.alt = '';
-      img.width = 40;
-      img.height = 40;
-      img.loading = 'lazy';
-      img.referrerPolicy = 'no-referrer';
-      topo.append(img);
-    } else {
-      topo.append(el('span', 'cartao__foto cartao__foto--inicial', a.autor.charAt(0).toUpperCase()));
-    }
-    const quem = el('div');
-    const nome = a.perfil ? el('a', 'cartao__autor', a.autor) : el('span', 'cartao__autor', a.autor);
-    if (nome instanceof HTMLAnchorElement) {
-      nome.href = a.perfil!;
-      nome.target = '_blank';
-      nome.rel = 'noopener nofollow';
-    }
-    quem.append(nome, el('span', 'cartao__quando', a.quando));
-    topo.append(quem);
-
-    const notaEl = el('p', 'estrelas cartao__estrelas', estrelas(a.nota));
-    notaEl.setAttribute('aria-label', `Nota ${a.nota} de 5`);
-
-    li.append(topo, notaEl);
-    if (a.texto) {
-      const texto = el('p', 'cartao__texto', a.texto);
-      li.append(texto);
-      requestAnimationFrame(() => {
-        if (texto.scrollHeight > texto.clientHeight + 2) {
-          const mais = el('button', 'cartao__mais', 'Ler mais');
-          mais.type = 'button';
-          mais.addEventListener('click', () => {
-            const aberto = texto.classList.toggle('cartao__texto--aberto');
-            mais.textContent = aberto ? 'Ler menos' : 'Ler mais';
-          });
-          li.append(mais);
-        }
-      });
-    }
-    return li;
-  }
-
-  function semDados() {
-    caixaNota.dataset.estado = 'vazio';
-    secao.querySelector('[data-total]')!.textContent = 'Veja as avaliações dos hóspedes direto no Google Maps.';
-    lista.replaceChildren();
-    lista.hidden = true;
-  }
-
-  async function carregar() {
-    try {
-      const r = await fetch('/api/avaliacoes', { headers: { Accept: 'application/json' } });
-      if (!r.ok) return semDados();
-      const d: Resposta = await r.json();
-      if (!d.configurado || d.erro || d.nota == null) return semDados();
-
-      caixaNota.dataset.estado = 'ok';
-      secao.querySelector('[data-nota]')!.textContent = d.nota.toFixed(1).replace('.', ',');
-      const est = secao.querySelector<HTMLElement>('[data-estrelas]')!;
-      est.textContent = estrelas(d.nota);
-      secao.querySelector('[data-total]')!.textContent =
-        `${d.total} ${d.total === 1 ? 'avaliação' : 'avaliações'} no Google`;
-      if (d.mapsUrl) secao.querySelector<HTMLAnchorElement>('[data-ver]')!.href = d.mapsUrl;
-      if (d.avaliarUrl) secao.querySelector<HTMLAnchorElement>('[data-avaliar]')!.href = d.avaliarUrl;
-
-      const itens = (d.avaliacoes || []).map(cartao);
-      if (itens.length) lista.replaceChildren(...itens);
-      else lista.hidden = true;
-    } catch {
-      semDados();
-    }
-  }
-
-  // Carrega quando a seção estiver perto de aparecer na tela
-  const obs = new IntersectionObserver(
-    (entradas) => {
-      if (entradas.some((e) => e.isIntersecting)) {
-        obs.disconnect();
-        carregar();
-      }
-    },
-    { rootMargin: '600px' },
-  );
-  obs.observe(secao);
-</script>
 
 <style>
   .avaliacoes {
@@ -183,13 +103,6 @@ import { site } from '../data/site';
     line-height: 0.9;
     color: var(--sea);
   }
-  .resumo__nota[data-estado='vazio'] .resumo__numero,
-  .resumo__nota[data-estado='vazio'] .estrelas {
-    display: none;
-  }
-  .resumo__nota[data-estado='carregando'] .resumo__numero {
-    opacity: 0.3;
-  }
   .resumo__total {
     color: var(--ink-soft);
     margin-top: 0.15rem;
@@ -200,17 +113,16 @@ import { site } from '../data/site';
     gap: 0.75rem;
     margin-top: 1.75rem;
   }
-  .resumo__fonte {
-    margin-top: 1rem;
-    font-size: 0.85rem;
-    color: var(--ink-soft);
-  }
 
-  .avaliacoes :global(.estrelas) {
+  .estrelas {
     color: #e9a23b;
     font-size: 1.35rem;
     letter-spacing: 0.08em;
     line-height: 1;
+  }
+  .estrelas--p {
+    font-size: 0.95rem;
+    letter-spacing: 0.04em;
   }
 
   .cartoes {
@@ -220,101 +132,51 @@ import { site } from '../data/site';
     display: grid;
     gap: 1rem;
   }
-  @media (min-width: 760px) {
-    .cartoes {
-      grid-template-columns: 1fr 1fr;
-      align-items: start;
-    }
-  }
-  .cartoes :global(.cartao) {
+  .cartao {
     display: grid;
-    gap: 0.75rem;
+    gap: 1.1rem;
     background: var(--paper);
     border-radius: 1rem;
-    padding: 1.4rem 1.5rem;
+    padding: 1.5rem 1.6rem;
   }
-  .cartoes :global(.cartao__topo) {
+  .cartao__texto {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 1.45rem;
+    line-height: 1.3;
+    color: var(--sea);
+  }
+  .cartao__rodape {
     display: flex;
     align-items: center;
     gap: 0.75rem;
   }
-  .cartoes :global(.cartao__topo > div) {
+  .cartao__foto {
     display: grid;
-  }
-  .cartoes :global(.cartao__foto) {
+    place-items: center;
+    flex: none;
     width: 2.5rem;
     height: 2.5rem;
     border-radius: 50%;
-    object-fit: cover;
-    flex: none;
-  }
-  .cartoes :global(.cartao__foto--inicial) {
-    display: grid;
-    place-items: center;
     background: var(--peach);
     color: var(--sea);
     font-weight: 700;
   }
-  .cartoes :global(.cartao__autor) {
+  .cartao__autor {
     font-weight: 700;
     color: var(--sea);
-    text-decoration: none;
   }
-  .cartoes :global(a.cartao__autor:hover) {
-    text-decoration: underline;
-  }
-  .cartoes :global(.cartao__quando) {
-    font-size: 0.85rem;
+  .cartao__quando {
+    font-size: 0.88rem;
     color: var(--ink-soft);
   }
-  .cartoes :global(.cartao__estrelas) {
-    font-size: 1.05rem;
-  }
-  .cartoes :global(.cartao__texto) {
-    display: -webkit-box;
-    -webkit-line-clamp: 6;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    white-space: pre-line;
-  }
-  .cartoes :global(.cartao__texto--aberto) {
-    display: block;
-  }
-  .cartoes :global(.cartao__mais) {
-    justify-self: start;
-    padding: 0;
-    border: 0;
-    background: none;
-    font: inherit;
-    font-weight: 700;
-    color: var(--sea);
-    text-decoration: underline;
-    text-underline-offset: 0.2em;
-    cursor: pointer;
-  }
 
-  .cartao--esqueleto span {
-    display: block;
-    height: 0.9rem;
-    border-radius: 999px;
-    background: linear-gradient(90deg, #e9f2f4, #f6fafb, #e9f2f4);
-    background-size: 200% 100%;
-    animation: brilho 1.4s linear infinite;
-  }
-  .cartao--esqueleto span:first-child {
-    width: 45%;
-  }
-  .cartao--esqueleto span:last-child {
-    width: 80%;
-  }
-  @keyframes brilho {
-    to {
-      background-position: -200% 0;
-    }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .cartao--esqueleto span {
-      animation: none;
-    }
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
   }
 </style>
