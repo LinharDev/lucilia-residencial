@@ -23,8 +23,11 @@ const jsonLd = {
     addressLocality: site.city,
     addressRegion: site.state,
     addressCountry: 'BR',
-    streetAddress: site.neighborhood,
+    streetAddress: `${site.street}, ${site.district}`,
+    postalCode: site.postalCode,
   },
+  geo: { '@type': 'GeoCoordinates', latitude: site.geo.lat, longitude: site.geo.lng },
+  hasMap: site.mapsUrl,
   amenityFeature: ['Ar-condicionado', 'Wi-Fi', 'Garagem coberta', 'Churrasqueira individual'].map((name) => ({
     '@type': 'LocationFeatureSpecification',
     name,

@@ -3,6 +3,8 @@ import WhatsIcon from './WhatsIcon.astro';
 import { site, whatsappUrl } from '../data/site';
 
 const tipos = ['Tanto faz', '1 quarto', '2 quartos', '3 quartos'];
+const semana = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
+const semanaNomes = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
 ---
 
 <section id="reservar" class="reserva">
@@ -25,18 +27,43 @@ const tipos = ['Tanto faz', '1 quarto', '2 quartos', '3 quartos'];
     </div>
 
     <form class="agenda" id="agenda" novalidate>
-      <fieldset class="agenda__datas">
+      <!-- Calendário -->
+      <fieldset class="datas">
         <legend class="sr-only">Datas da estadia</legend>
-        <label class="campo">
-          <span class="campo__rotulo">Entrada</span>
-          <input type="date" name="entrada" id="entrada" required />
-        </label>
-        <label class="campo">
-          <span class="campo__rotulo">Saída</span>
-          <input type="date" name="saida" id="saida" required />
-        </label>
+        <div class="datas__resumo">
+          <button type="button" class="datas__campo" data-modo="inicio" aria-pressed="true">
+            <span class="datas__rotulo">Entrada</span>
+            <span class="datas__valor" data-valor="inicio">Escolha o dia</span>
+          </button>
+          <button type="button" class="datas__campo" data-modo="fim" aria-pressed="false">
+            <span class="datas__rotulo">Saída</span>
+            <span class="datas__valor" data-valor="fim">Escolha o dia</span>
+          </button>
+        </div>
+
+        <div class="cal" id="calendario">
+          <div class="cal__topo">
+            <button type="button" class="cal__nav" data-nav="-1" aria-label="Mês anterior">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"></path></svg>
+            </button>
+            <p class="cal__mes" data-mes aria-live="polite"></p>
+            <button type="button" class="cal__nav" data-nav="1" aria-label="Próximo mês">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"></path></svg>
+            </button>
+          </div>
+          <div class="cal__semana" aria-hidden="true">
+            {semana.map((d, i) => <abbr title={semanaNomes[i]}>{d}</abbr>)}
+          </div>
+          <div class="cal__dias" data-dias></div>
+        </div>
+
+        <div class="datas__rodape">
+          <p class="agenda__noites" id="noites" aria-live="polite">Toque no dia da entrada.</p>
+          <button type="button" class="datas__limpar" data-limpar hidden>Limpar datas</button>
+        </div>
+        <input type="hidden" name="entrada" id="entrada" />
+        <input type="hidden" name="saida" id="saida" />
       </fieldset>
-      <p class="agenda__noites" id="noites" aria-live="polite">Escolha a entrada e a saída.</p>
 
       <div class="agenda__linha">
         <label class="campo">
@@ -96,30 +123,209 @@ const tipos = ['Tanto faz', '1 quarto', '2 quartos', '3 quartos'];
   const form = document.querySelector<HTMLFormElement>('#agenda')!;
   const entrada = form.querySelector<HTMLInputElement>('#entrada')!;
   const saida = form.querySelector<HTMLInputElement>('#saida')!;
-  const noites = document.querySelector<HTMLParagraphElement>('#noites')!;
-  const erro = document.querySelector<HTMLParagraphElement>('#erro')!;
-  const previa = document.querySelector<HTMLPreElement>('#previa')!;
+  const noites = form.querySelector<HTMLParagraphElement>('#noites')!;
+  const erro = form.querySelector<HTMLParagraphElement>('#erro')!;
+  const previa = form.querySelector<HTMLPreElement>('#previa')!;
+  const cal = form.querySelector<HTMLDivElement>('#calendario')!;
+  const dias = cal.querySelector<HTMLDivElement>('[data-dias]')!;
+  const rotuloMes = cal.querySelector<HTMLParagraphElement>('[data-mes]')!;
+  const botaoLimpar = form.querySelector<HTMLButtonElement>('[data-limpar]')!;
+  const camposResumo = [...form.querySelectorAll<HTMLButtonElement>('.datas__campo')];
 
+  // ---------- utilidades de data ----------
+  const semHora = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const somarDias = (d: Date, n: number) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
+  const mesmoDia = (a: Date | null, b: Date | null) => !!a && !!b && a.getTime() === b.getTime();
   const paraISO = (d: Date) =>
     `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   const deISO = (s: string) => {
     const [a, m, d] = s.split('-').map(Number);
     return new Date(a, m - 1, d);
   };
-  const somarDias = (d: Date, n: number) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
-  const formatar = (d: Date) => {
+  const formatarLongo = (d: Date) => {
     const semana = d.toLocaleDateString('pt-BR', { weekday: 'long' }).replace('-feira', '');
     return `${semana}, ${d.toLocaleDateString('pt-BR')}`;
   };
+  const formatarCurto = (d: Date) =>
+    d.toLocaleDateString('pt-BR', { weekday: 'short', day: 'numeric', month: 'short' }).replace(/\./g, '');
   const plural = (n: number, um: string, varios: string) => `${n} ${n === 1 ? um : varios}`;
 
-  const hoje = new Date();
-  entrada.min = paraISO(hoje);
-  saida.min = paraISO(somarDias(hoje, 1));
+  // ---------- estado do calendário ----------
+  const hoje = semHora(new Date());
+  let inicio: Date | null = null;
+  let fim: Date | null = null;
+  let hover: Date | null = null;
+  let modo: 'inicio' | 'fim' | 'novo' = 'novo';
+  let vista = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+  let foco = hoje;
 
+  function escolher(d: Date) {
+    if (d < hoje) return;
+    if (modo === 'fim' && inicio) {
+      if (d <= inicio) {
+        inicio = d;
+      } else {
+        fim = d;
+        modo = 'novo';
+      }
+    } else if (modo === 'inicio') {
+      inicio = d;
+      if (fim && fim <= d) fim = null;
+      modo = fim ? 'novo' : 'fim';
+    } else {
+      inicio = d;
+      fim = null;
+      modo = 'fim';
+    }
+    foco = d;
+    hover = null;
+    erro.textContent = '';
+    sincronizar();
+  }
+
+  function sincronizar() {
+    entrada.value = inicio ? paraISO(inicio) : '';
+    saida.value = fim ? paraISO(fim) : '';
+    desenhar();
+    atualizar();
+  }
+
+  function desenhar() {
+    const tinhaFoco = dias.contains(document.activeElement);
+    const ano = vista.getFullYear();
+    const mes = vista.getMonth();
+    const nome = vista.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }).replace(' de ', ' ');
+    rotuloMes.textContent = nome.charAt(0).toUpperCase() + nome.slice(1);
+    cal.querySelector<HTMLButtonElement>('[data-nav="-1"]')!.disabled =
+      ano === hoje.getFullYear() && mes === hoje.getMonth();
+
+    // se o foco saiu do mês visível, traz para dentro
+    if (foco.getMonth() !== mes || foco.getFullYear() !== ano) {
+      foco = new Date(ano, mes, 1) < hoje ? hoje : new Date(ano, mes, 1);
+    }
+
+    const fimFaixa = fim ?? (inicio && hover && hover > inicio ? hover : null);
+    const frag = document.createDocumentFragment();
+    const primeiroDiaSemana = new Date(ano, mes, 1).getDay();
+    for (let i = 0; i < primeiroDiaSemana; i++) frag.append(Object.assign(document.createElement('span'), { className: 'cal__vazio' }));
+
+    const totalDias = new Date(ano, mes + 1, 0).getDate();
+    for (let dia = 1; dia <= totalDias; dia++) {
+      const d = new Date(ano, mes, dia);
+      const celula = document.createElement('div');
+      celula.className = 'cal__celula';
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'cal__dia';
+      b.textContent = String(dia);
+      b.dataset.iso = paraISO(d);
+      b.tabIndex = mesmoDia(d, foco) ? 0 : -1;
+
+      const passado = d < hoje;
+      const ehInicio = mesmoDia(d, inicio);
+      const ehFim = mesmoDia(d, fim) || (!fim && mesmoDia(d, fimFaixa));
+      const noMeio = !!inicio && !!fimFaixa && d > inicio && d < fimFaixa;
+      if (passado) b.disabled = true;
+      if (mesmoDia(d, hoje)) b.classList.add('cal__dia--hoje');
+      if (ehInicio) celula.classList.add('cal__celula--inicio');
+      if (ehFim) celula.classList.add('cal__celula--fim');
+      if (ehInicio && fimFaixa) celula.classList.add('cal__celula--com-faixa');
+      if (noMeio) celula.classList.add('cal__celula--meio');
+      if (!fim && hover && mesmoDia(d, hover)) celula.classList.add('cal__celula--previa');
+      b.setAttribute('aria-pressed', String(ehInicio || mesmoDia(d, fim)));
+      let rotulo = d.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+      if (ehInicio) rotulo += ', entrada';
+      if (mesmoDia(d, fim)) rotulo += ', saída';
+      if (passado) rotulo += ', indisponível';
+      b.setAttribute('aria-label', rotulo);
+      celula.append(b);
+      frag.append(celula);
+    }
+    dias.replaceChildren(frag);
+    if (tinhaFoco) dias.querySelector<HTMLButtonElement>(`[data-iso="${paraISO(foco)}"]`)?.focus();
+
+    // resumo
+    form.querySelector('[data-valor="inicio"]')!.textContent = inicio ? formatarCurto(inicio) : 'Escolha o dia';
+    form.querySelector('[data-valor="fim"]')!.textContent = fim ? formatarCurto(fim) : 'Escolha o dia';
+    const ativo = modo === 'fim' ? 'fim' : 'inicio';
+    camposResumo.forEach((c) => {
+      const on = c.dataset.modo === ativo && modo !== 'novo';
+      c.setAttribute('aria-pressed', String(on || (modo === 'novo' && !inicio && c.dataset.modo === 'inicio')));
+      c.classList.toggle('datas__campo--preenchido', c.dataset.modo === 'inicio' ? !!inicio : !!fim);
+    });
+    botaoLimpar.hidden = !inicio;
+  }
+
+  // cliques e hover nos dias
+  dias.addEventListener('click', (e) => {
+    const b = (e.target as HTMLElement).closest<HTMLButtonElement>('.cal__dia');
+    if (b && !b.disabled) escolher(deISO(b.dataset.iso!));
+  });
+  dias.addEventListener('pointerover', (e) => {
+    if (fim || !inicio || (e as PointerEvent).pointerType === 'touch') return;
+    const b = (e.target as HTMLElement).closest<HTMLButtonElement>('.cal__dia');
+    const d = b && !b.disabled ? deISO(b.dataset.iso!) : null;
+    if (!mesmoDia(d, hover)) {
+      hover = d;
+      desenhar();
+    }
+  });
+  dias.addEventListener('pointerleave', () => {
+    if (hover) {
+      hover = null;
+      desenhar();
+    }
+  });
+
+  // teclado: setas andam pelos dias, PageUp/PageDown trocam o mês
+  dias.addEventListener('keydown', (e) => {
+    const passos: Record<string, number> = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -7, ArrowDown: 7 };
+    let novo: Date | null = null;
+    if (e.key in passos) novo = somarDias(foco, passos[e.key]);
+    else if (e.key === 'PageUp') novo = new Date(foco.getFullYear(), foco.getMonth() - 1, foco.getDate());
+    else if (e.key === 'PageDown') novo = new Date(foco.getFullYear(), foco.getMonth() + 1, foco.getDate());
+    if (!novo) return;
+    e.preventDefault();
+    if (novo < hoje) novo = hoje;
+    foco = novo;
+    vista = new Date(novo.getFullYear(), novo.getMonth(), 1);
+    desenhar();
+    dias.querySelector<HTMLButtonElement>(`[data-iso="${paraISO(foco)}"]`)?.focus();
+  });
+
+  cal.querySelectorAll<HTMLButtonElement>('[data-nav]').forEach((b) =>
+    b.addEventListener('click', () => {
+      vista = new Date(vista.getFullYear(), vista.getMonth() + Number(b.dataset.nav), 1);
+      desenhar();
+    }),
+  );
+
+  camposResumo.forEach((c) =>
+    c.addEventListener('click', () => {
+      if (c.dataset.modo === 'fim' && !inicio) return;
+      modo = c.dataset.modo as 'inicio' | 'fim';
+      const alvo = modo === 'inicio' ? inicio : fim ?? inicio;
+      if (alvo) {
+        vista = new Date(alvo.getFullYear(), alvo.getMonth(), 1);
+        foco = alvo;
+      }
+      desenhar();
+      dias.querySelector<HTMLButtonElement>('[tabindex="0"]')?.focus();
+    }),
+  );
+
+  botaoLimpar.addEventListener('click', () => {
+    inicio = fim = hover = null;
+    modo = 'novo';
+    vista = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+    foco = hoje;
+    sincronizar();
+  });
+
+  // ---------- mensagem do WhatsApp ----------
   function contarNoites(): number | null {
-    if (!entrada.value || !saida.value) return null;
-    const n = Math.round((deISO(saida.value).getTime() - deISO(entrada.value).getTime()) / 86400000);
+    if (!inicio || !fim) return null;
+    const n = Math.round((fim.getTime() - inicio.getTime()) / 86400000);
     return n > 0 ? n : null;
   }
 
@@ -132,8 +338,8 @@ const tipos = ['Tanto faz', '1 quarto', '2 quartos', '3 quartos'];
     const n = contarNoites();
 
     const linhas = ['Olá! Vim pelo site e gostaria de consultar disponibilidade no Lucília Residencial.', ''];
-    if (entrada.value) linhas.push(`📅 Entrada: ${formatar(deISO(entrada.value))}`);
-    if (saida.value) linhas.push(`📅 Saída: ${formatar(deISO(saida.value))}`);
+    if (inicio) linhas.push(`📅 Entrada: ${formatarLongo(inicio)}`);
+    if (fim) linhas.push(`📅 Saída: ${formatarLongo(fim)}`);
     if (n) linhas.push(`🌙 ${plural(n, 'noite', 'noites')}`);
     let pessoas = plural(adultos, 'adulto', 'adultos');
     if (criancas > 0) pessoas += ` e ${plural(criancas, 'criança', 'crianças')}`;
@@ -146,39 +352,22 @@ const tipos = ['Tanto faz', '1 quarto', '2 quartos', '3 quartos'];
 
   function atualizar() {
     const n = contarNoites();
-    noites.textContent = n
-      ? `${plural(n, 'noite', 'noites')}, de ${deISO(entrada.value).toLocaleDateString('pt-BR')} a ${deISO(saida.value).toLocaleDateString('pt-BR')}`
-      : 'Escolha a entrada e a saída.';
+    if (n) noites.textContent = plural(n, 'noite', 'noites');
+    else if (inicio) noites.textContent = 'Agora toque no dia da saída.';
+    else noites.textContent = 'Toque no dia da entrada.';
     noites.classList.toggle('agenda__noites--ok', Boolean(n));
     previa.textContent = montarMensagem();
   }
 
-  entrada.addEventListener('change', () => {
-    if (!entrada.value) return atualizar();
-    const minimaSaida = somarDias(deISO(entrada.value), 1);
-    saida.min = paraISO(minimaSaida);
-    if (!saida.value || deISO(saida.value) < minimaSaida) saida.value = paraISO(minimaSaida);
-    erro.textContent = '';
-    atualizar();
-  });
   form.addEventListener('input', atualizar);
   form.addEventListener('change', atualizar);
 
   form.addEventListener('submit', (e) => {
     e.preventDefault();
-    if (!entrada.value || !saida.value) {
-      erro.textContent = 'Escolha a data de entrada e a de saída.';
-      (entrada.value ? saida : entrada).focus();
-      return;
-    }
-    if (deISO(entrada.value) < deISO(paraISO(hoje))) {
-      erro.textContent = 'A data de entrada já passou. Escolha uma data a partir de hoje.';
-      entrada.focus();
-      return;
-    }
-    if (!contarNoites()) {
-      erro.textContent = 'A saída precisa ser depois da entrada.';
-      saida.focus();
+    if (!inicio || !fim) {
+      erro.textContent = inicio ? 'Escolha o dia da saída no calendário.' : 'Escolha os dias de entrada e saída no calendário.';
+      cal.scrollIntoView({ block: 'center' });
+      dias.querySelector<HTMLButtonElement>('[tabindex="0"]')?.focus({ preventScroll: true });
       return;
     }
     erro.textContent = '';
@@ -189,7 +378,7 @@ const tipos = ['Tanto faz', '1 quarto', '2 quartos', '3 quartos'];
     link.click();
   });
 
-  atualizar();
+  sincronizar();
 </script>
 
 <style>
@@ -243,16 +432,220 @@ const tipos = ['Tanto faz', '1 quarto', '2 quartos', '3 quartos'];
     padding: 0;
     min-width: 0;
   }
-  .agenda__datas,
-  .agenda__linha {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.9rem;
-  }
   .reserva__grid > *,
   .agenda > *,
   .campo {
     min-width: 0;
+  }
+
+  /* ---------- Calendário ---------- */
+  .datas {
+    display: grid;
+    gap: 1rem;
+  }
+  .datas__resumo {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border: 1.5px solid #c9dadf;
+    border-radius: 1rem;
+    overflow: hidden;
+  }
+  .datas__campo {
+    display: grid;
+    gap: 0.1rem;
+    padding: 0.7rem 1rem;
+    text-align: left;
+    font: inherit;
+    background: #fff;
+    border: 0;
+    cursor: pointer;
+    color: var(--ink-soft);
+    transition: background-color 0.15s;
+  }
+  .datas__campo + .datas__campo {
+    border-left: 1.5px solid #c9dadf;
+  }
+  .datas__campo[aria-pressed='true'] {
+    background: var(--sky);
+    box-shadow: inset 0 -3px 0 var(--sea);
+  }
+  .datas__rotulo {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--sea);
+  }
+  .datas__valor {
+    font-size: 1rem;
+  }
+  .datas__campo--preenchido .datas__valor {
+    color: var(--ink);
+    font-weight: 700;
+  }
+
+  .cal__topo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+  }
+  .cal__mes {
+    font-family: var(--font-display);
+    font-size: 1.6rem;
+    font-weight: 500;
+    color: var(--sea);
+  }
+  .cal__nav {
+    display: grid;
+    place-items: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border: 1.5px solid #c9dadf;
+    border-radius: 50%;
+    background: #fff;
+    color: var(--sea);
+    cursor: pointer;
+  }
+  .cal__nav:hover:not(:disabled) {
+    background: var(--sky);
+  }
+  .cal__nav:disabled {
+    opacity: 0.35;
+    cursor: default;
+  }
+  .cal__nav svg {
+    width: 1.1rem;
+    height: 1.1rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .cal__semana,
+  .cal__dias {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+  }
+  .cal__semana abbr {
+    text-decoration: none;
+    text-align: center;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--ink-soft);
+    padding-block: 0.4rem;
+  }
+  .cal__dias {
+    row-gap: 0.2rem;
+  }
+  .cal__dias :global(.cal__celula) {
+    position: relative;
+    display: grid;
+    place-items: center;
+  }
+  /* faixa do intervalo */
+  .cal__dias :global(.cal__celula--meio)::before,
+  .cal__dias :global(.cal__celula--com-faixa)::before,
+  .cal__dias :global(.cal__celula--fim)::before {
+    content: '';
+    position: absolute;
+    inset: 12% 0;
+    background: var(--peach-soft);
+  }
+  .cal__dias :global(.cal__celula--com-faixa)::before {
+    left: 50%;
+  }
+  .cal__dias :global(.cal__celula--fim)::before {
+    right: 50%;
+  }
+  .cal__dias :global(.cal__celula--inicio.cal__celula--fim)::before {
+    display: none;
+  }
+  .cal__dias :global(.cal__dia) {
+    position: relative;
+    width: min(100%, 2.9rem);
+    aspect-ratio: 1;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    font: inherit;
+    font-size: 0.98rem;
+    font-weight: 700;
+    color: var(--ink);
+    cursor: pointer;
+    transition: background-color 0.12s, color 0.12s;
+  }
+  .cal__dias :global(.cal__dia:hover:not(:disabled)) {
+    background: var(--sky);
+  }
+  .cal__dias :global(.cal__dia:disabled) {
+    color: #b7c5ca;
+    font-weight: 400;
+    text-decoration: line-through;
+    text-decoration-color: rgb(183 197 202 / 0.6);
+    cursor: default;
+  }
+  .cal__dias :global(.cal__dia--hoje)::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: 16%;
+    width: 0.3rem;
+    height: 0.3rem;
+    margin-left: -0.15rem;
+    border-radius: 50%;
+    background: var(--hibisco);
+  }
+  .cal__dias :global(.cal__celula--inicio .cal__dia),
+  .cal__dias :global(.cal__celula--fim .cal__dia) {
+    background: var(--sea);
+    color: #fff;
+  }
+  .cal__dias :global(.cal__celula--previa .cal__dia) {
+    background: var(--peach);
+    color: var(--sea);
+  }
+  .cal__dias :global(.cal__dia:focus-visible) {
+    outline: 3px solid var(--hibisco);
+    outline-offset: 1px;
+  }
+
+  .datas__rodape {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    min-height: 1.6rem;
+  }
+  .agenda__noites {
+    font-size: 0.95rem;
+    color: var(--ink-soft);
+  }
+  .agenda__noites--ok {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.2rem 0.8rem;
+    border-radius: 999px;
+    background: var(--peach-soft);
+    color: var(--sea);
+    font-weight: 700;
+  }
+  .datas__limpar {
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    font-size: 0.9rem;
+    color: var(--ink-soft);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+    cursor: pointer;
+  }
+
+  /* ---------- Demais campos ---------- */
+  .agenda__linha {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.9rem;
   }
   .campo {
     display: grid;
@@ -268,7 +661,7 @@ const tipos = ['Tanto faz', '1 quarto', '2 quartos', '3 quartos'];
     font-weight: 400;
     color: var(--ink-soft);
   }
-  .campo input:not([type="radio"]),
+  .campo input:not([type='radio']),
   .campo select,
   .campo textarea {
     width: 100%;
@@ -285,22 +678,12 @@ const tipos = ['Tanto faz', '1 quarto', '2 quartos', '3 quartos'];
   .campo textarea {
     resize: vertical;
   }
-  .campo input:not([type="radio"]):focus-visible,
+  .campo input:not([type='radio']):focus-visible,
   .campo select:focus-visible,
   .campo textarea:focus-visible {
     outline: 3px solid var(--hibisco);
     outline-offset: 1px;
     border-color: var(--sea);
-  }
-
-  .agenda__noites {
-    margin-top: -0.4rem;
-    font-size: 0.95rem;
-    color: var(--ink-soft);
-  }
-  .agenda__noites--ok {
-    color: var(--sea);
-    font-weight: 700;
   }
 
   .pilulas {

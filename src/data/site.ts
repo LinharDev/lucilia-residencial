@@ -10,6 +10,16 @@ export const site = {
   city: 'Palhoça',
   neighborhood: 'Praia da Pinheira',
   state: 'SC',
+  // Dados públicos do perfil no Google Maps
+  street: 'Servidão Canto das Amendoeiras, 51',
+  district: 'Enseada da Pinheira',
+  postalCode: '88139-419',
+  geo: { lat: -27.8875831, lng: -48.5941291 },
+  mapsUrl: 'https://maps.google.com/?cid=5325784994166876222',
+  mapsEmbed:
+    'https://maps.google.com/maps?q=' +
+    encodeURIComponent('Lucília Residencial, Serv. Canto das Amendoeiras, 51 - Enseada da Pinheira, Palhoça - SC') +
+    '&z=16&output=embed',
 };
 
 const message = 'Olá! Vim pelo site e gostaria de consultar datas e valores no Lucília Residencial.';

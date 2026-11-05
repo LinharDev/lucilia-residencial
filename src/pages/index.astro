@@ -5,6 +5,7 @@ import Logo from '../components/Logo.astro';
 import WhatsIcon from '../components/WhatsIcon.astro';
 import CalendarIcon from '../components/CalendarIcon.astro';
 import Reserva from '../components/Reserva.astro';
+import Avaliacoes from '../components/Avaliacoes.astro';
 import { site, whatsappUrl } from '../data/site';
 
 import fachada from '../assets/fotos/fachada-hibiscos.jpg';
@@ -82,6 +83,7 @@ const comodidades = [
         <ul class="topo__nav">
           <li><a href="#apartamentos">Apartamentos</a></li>
           <li><a href="#fotos">Fotos</a></li>
+          <li><a href="#avaliacoes">Avaliações</a></li>
           <li><a href="#como-chegar">Como chegar</a></li>
         </ul>
       </nav>
@@ -206,6 +208,9 @@ const comodidades = [
       </div>
     </section>
 
+    <!-- AVALIAÇÕES (ao vivo, via Google Maps) -->
+    <Avaliacoes />
+
     <!-- FOTOS -->
     <section id="fotos" class="secao fotos">
       <div class="wrap">
@@ -221,7 +226,12 @@ const comodidades = [
             fotosGaleria.map((f, i) => (
               <li class={`galeria__item galeria__item--${i}`}>
                 <button type="button" class="galeria__btn" data-index={i} data-full={f.full} data-alt={f.alt}>
-                  <Image src={f.src} alt={f.alt} widths={[320, 520]} sizes="(min-width: 960px) 25vw, 50vw" />
+                  <Image
+                    src={f.src}
+                    alt={f.alt}
+                    widths={i === 0 ? [480, 800, 1080] : [320, 520]}
+                    sizes={i === 0 ? '(min-width: 760px) 50vw, 100vw' : '(min-width: 760px) 25vw, 50vw'}
+                  />
                   <span class="sr-only">Ampliar foto</span>
                 </button>
               </li>
@@ -268,10 +278,13 @@ const comodidades = [
           <div class="arredores__mapa">
             <iframe
               title="Mapa da Praia da Pinheira, Palhoça (SC)"
-              src="https://maps.google.com/maps?q=Praia%20da%20Pinheira%2C%20Palho%C3%A7a%20-%20SC&z=14&output=embed"
+              src={site.mapsEmbed}
               loading="lazy"
               referrerpolicy="no-referrer-when-downgrade"></iframe>
-            <p class="arredores__obs">O endereço exato é enviado junto com a confirmação da reserva.</p>
+            <p class="arredores__obs">
+              {site.street}, {site.district}, {site.city} (SC), CEP {site.postalCode}.
+              <a href={site.mapsUrl} target="_blank" rel="noopener">Abrir no Google Maps</a>
+            </p>
           </div>
         </div>
       </div>
@@ -707,25 +720,25 @@ const comodidades = [
     }
   }
 
-  /* Galeria */
+  /* Galeria: 1 foto grande + 8 quadradas, grade sempre completa
+     (celular: 2 colunas; telas maiores: 4 colunas, a grande ocupa 2x2) */
   .galeria {
     list-style: none;
     margin: 0;
     padding: 0;
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    grid-auto-rows: 9rem;
-    grid-auto-flow: dense;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0.6rem;
   }
   .galeria__item {
-    grid-row: span 2;
+    aspect-ratio: 1;
   }
-  .galeria__item--0,
-  .galeria__item--1 {
-    grid-row: span 3;
+  .galeria__item--0 {
+    grid-column: span 2;
+    aspect-ratio: 4 / 3;
   }
   .galeria__btn {
+    position: relative;
     display: block;
     width: 100%;
     height: 100%;
@@ -737,6 +750,8 @@ const comodidades = [
     cursor: zoom-in;
   }
   .galeria__btn img {
+    position: absolute;
+    inset: 0;
     width: 100%;
     height: 100%;
     object-fit: cover;
@@ -747,16 +762,12 @@ const comodidades = [
   }
   @media (min-width: 760px) {
     .galeria {
-      grid-template-columns: repeat(4, 1fr);
-      grid-auto-rows: 8.5rem;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 0.75rem;
     }
     .galeria__item--0 {
-      grid-column: span 2;
-      grid-row: span 4;
-    }
-    .galeria__item--1 {
-      grid-column: span 2;
-      grid-row: span 3;
+      grid-row: span 2;
+      aspect-ratio: auto;
     }
   }
 
