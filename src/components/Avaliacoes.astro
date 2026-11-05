@@ -25,22 +25,19 @@ const avaliacoes = [
 ];
 ---
 
-<section id="avaliacoes" class="secao avaliacoes">
-  <div class="wrap avaliacoes__grid">
-    <div class="resumo">
+<section id="avaliacoes" class="avaliacoes">
+  <div class="wrap">
+    <div class="avaliacoes__topo">
       <h2>O que dizem os hóspedes</h2>
-      <div class="resumo__nota">
+      <div class="resumo">
         <span class="resumo__numero">{resumo.nota}</span>
-        <div>
+        <div class="resumo__info">
           <span class="estrelas" aria-hidden="true">★★★★★</span>
           <p class="resumo__total">
             <span class="sr-only">Nota {resumo.nota} de 5, </span>{resumo.total} avaliações no Google
           </p>
+          <a class="resumo__link" href={site.mapsUrl} target="_blank" rel="noopener">Ver no Google Maps</a>
         </div>
-      </div>
-      <div class="resumo__acoes">
-        <a class="btn btn--solid" href={site.mapsUrl} target="_blank" rel="noopener">Ver no Google Maps</a>
-        <a class="btn btn--ghost" href={site.mapsUrl} target="_blank" rel="noopener">Deixar uma avaliação</a>
       </div>
     </div>
 
@@ -48,6 +45,9 @@ const avaliacoes = [
       {
         avaliacoes.map((a) => (
           <li class="cartao">
+            <span class="cartao__aspas" aria-hidden="true">
+              “
+            </span>
             <blockquote class="cartao__texto">{a.texto}</blockquote>
             <div class="cartao__rodape">
               <span class="cartao__foto" aria-hidden="true">
@@ -58,8 +58,8 @@ const avaliacoes = [
                 <p class="cartao__quando">
                   <span class="estrelas estrelas--p" aria-label="5 estrelas">
                     ★★★★★
-                  </span>{' '}
-                  no Google, {a.quando}
+                  </span>
+                  <span>Google, {a.quando}</span>
                 </p>
               </div>
             </div>
@@ -67,61 +67,65 @@ const avaliacoes = [
         ))
       }
     </ul>
+
+    <p class="avaliacoes__convite">
+      Já se hospedou com a gente?
+      <a href={site.mapsUrl} target="_blank" rel="noopener">Deixe sua avaliação no Google</a>
+    </p>
   </div>
 </section>
 
 <style>
   .avaliacoes {
     background: var(--sky);
+    padding-block: clamp(4rem, 9vw, 7rem);
   }
-  .avaliacoes__grid {
+
+  .avaliacoes__topo {
     display: grid;
-    gap: 2.5rem;
-    align-items: start;
+    gap: 1.5rem;
+    margin-bottom: clamp(2rem, 5vw, 3.5rem);
   }
-  @media (min-width: 960px) {
-    .avaliacoes__grid {
-      grid-template-columns: 0.9fr 1.3fr;
-      gap: 4rem;
-    }
-    .resumo {
-      position: sticky;
-      top: 7rem;
+  @media (min-width: 760px) {
+    .avaliacoes__topo {
+      grid-template-columns: 1fr auto;
+      align-items: end;
+      gap: 3rem;
     }
   }
 
-  .resumo__nota {
+  .resumo {
     display: flex;
     align-items: center;
     gap: 1rem;
-    margin-top: 1.75rem;
   }
   .resumo__numero {
     font-family: var(--font-display);
     font-weight: 500;
-    font-size: clamp(4rem, 10vw, 5.5rem);
-    line-height: 0.9;
+    font-size: clamp(3.75rem, 9vw, 5rem);
+    line-height: 0.85;
     color: var(--sea);
+  }
+  .resumo__info {
+    display: grid;
+    gap: 0.15rem;
   }
   .resumo__total {
     color: var(--ink-soft);
-    margin-top: 0.15rem;
   }
-  .resumo__acoes {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.75rem;
-    margin-top: 1.75rem;
+  .resumo__link {
+    font-weight: 700;
+    font-size: 0.95rem;
   }
 
   .estrelas {
     color: #e9a23b;
-    font-size: 1.35rem;
+    font-size: 1.3rem;
     letter-spacing: 0.08em;
     line-height: 1;
   }
   .estrelas--p {
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     letter-spacing: 0.04em;
   }
 
@@ -130,33 +134,51 @@ const avaliacoes = [
     margin: 0;
     padding: 0;
     display: grid;
-    gap: 1rem;
+    gap: 1.25rem;
   }
+  @media (min-width: 900px) {
+    .cartoes {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
   .cartao {
-    display: grid;
-    gap: 1.1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
     background: var(--paper);
-    border-radius: 1rem;
-    padding: 1.5rem 1.6rem;
+    border-radius: var(--radius-photo);
+    padding: clamp(1.5rem, 3vw, 2rem);
+    box-shadow: 0 1.5rem 2.5rem -2rem rgb(14 77 94 / 0.35);
+  }
+  .cartao__aspas {
+    font-family: var(--font-display);
+    font-size: 4.5rem;
+    line-height: 0.6;
+    height: 2rem;
+    color: var(--peach-deep);
   }
   .cartao__texto {
     margin: 0;
+    flex: 1;
     font-family: var(--font-display);
-    font-size: 1.45rem;
-    line-height: 1.3;
+    font-size: clamp(1.3rem, 2vw, 1.45rem);
+    line-height: 1.35;
     color: var(--sea);
   }
   .cartao__rodape {
     display: flex;
     align-items: center;
     gap: 0.75rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--peach-soft);
   }
   .cartao__foto {
     display: grid;
     place-items: center;
     flex: none;
-    width: 2.5rem;
-    height: 2.5rem;
+    width: 2.6rem;
+    height: 2.6rem;
     border-radius: 50%;
     background: var(--peach);
     color: var(--sea);
@@ -167,8 +189,21 @@ const avaliacoes = [
     color: var(--sea);
   }
   .cartao__quando {
-    font-size: 0.88rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.85rem;
     color: var(--ink-soft);
+  }
+
+  .avaliacoes__convite {
+    margin-top: 2rem;
+    text-align: center;
+    color: var(--ink-soft);
+  }
+  .avaliacoes__convite a {
+    font-weight: 700;
   }
 
   .sr-only {

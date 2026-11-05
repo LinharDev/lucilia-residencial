@@ -5,6 +5,12 @@ import { site, whatsappUrl } from '../data/site';
 const tipos = ['Tanto faz', '1 quarto', '2 quartos', '3 quartos'];
 const semana = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
 const semanaNomes = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
+const hospedes = [
+  { nome: 'adultos', rotulo: 'Adultos', ajuda: '', inicial: 2, min: 1, max: 12 },
+  { nome: 'criancas0a6', rotulo: 'Crianças de 0 a 6 anos', ajuda: '', inicial: 0, min: 0, max: 8 },
+  { nome: 'criancas6a12', rotulo: 'Crianças de 6 a 12 anos', ajuda: '', inicial: 0, min: 0, max: 8 },
+  { nome: 'criancas12mais', rotulo: 'Crianças acima de 12 anos', ajuda: '', inicial: 0, min: 0, max: 8 },
+];
 ---
 
 <section id="reservar" class="reserva">
@@ -12,7 +18,7 @@ const semanaNomes = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta'
     <div class="reserva__intro">
       <h2>Reserve sua estadia</h2>
       <p class="reserva__texto">
-        Escolha as datas e quantas pessoas vêm. Ao enviar, o WhatsApp abre com a mensagem pronta e respondemos com
+        Nos informe o período e o número de pessoas. Ao enviar, o WhatsApp abre com a mensagem pronta e respondemos com
         disponibilidade e valores.
       </p>
       <div class="reserva__outros">
@@ -65,20 +71,37 @@ const semanaNomes = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta'
         <input type="hidden" name="saida" id="saida" />
       </fieldset>
 
-      <div class="agenda__linha">
-        <label class="campo">
-          <span class="campo__rotulo">Adultos</span>
-          <select name="adultos">
-            {Array.from({ length: 10 }, (_, i) => <option value={i + 1} selected={i === 1}>{i + 1}</option>)}
-          </select>
-        </label>
-        <label class="campo">
-          <span class="campo__rotulo">Crianças</span>
-          <select name="criancas">
-            {Array.from({ length: 9 }, (_, i) => <option value={i}>{i}</option>)}
-          </select>
-        </label>
-      </div>
+      <fieldset class="campo hospedes">
+        <legend class="campo__rotulo">Hóspedes</legend>
+        {
+          hospedes.map((h) => (
+            <div class="contador">
+              <div class="contador__texto">
+                <span class="contador__nome" id={`rot-${h.nome}`}>{h.rotulo}</span>
+                {h.ajuda && <span class="contador__ajuda">{h.ajuda}</span>}
+              </div>
+              <div class="contador__controle">
+                <button type="button" class="contador__btn" data-passo="-1" aria-label={`Diminuir ${h.rotulo.toLowerCase()}`}>
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 12h12" /></svg>
+                </button>
+                <input
+                  type="number"
+                  name={h.nome}
+                  value={h.inicial}
+                  min={h.min}
+                  max={h.max}
+                  inputmode="numeric"
+                  aria-labelledby={`rot-${h.nome}`}
+                  readonly
+                />
+                <button type="button" class="contador__btn" data-passo="1" aria-label={`Aumentar ${h.rotulo.toLowerCase()}`}>
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 12h12M12 6v12" /></svg>
+                </button>
+              </div>
+            </div>
+          ))
+        }
+      </fieldset>
 
       <fieldset class="campo">
         <legend class="campo__rotulo">Apartamento</legend>
@@ -332,7 +355,12 @@ const semanaNomes = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta'
   function montarMensagem(): string {
     const dados = new FormData(form);
     const adultos = Number(dados.get('adultos'));
-    const criancas = Number(dados.get('criancas'));
+    const faixas = [
+      { qtd: Number(dados.get('criancas0a6')), faixa: 'de 0 a 6 anos' },
+      { qtd: Number(dados.get('criancas6a12')), faixa: 'de 6 a 12 anos' },
+      { qtd: Number(dados.get('criancas12mais')), faixa: 'acima de 12 anos' },
+    ].filter((f) => f.qtd > 0);
+    const criancas = faixas.reduce((s, f) => s + f.qtd, 0);
     const nome = String(dados.get('nome') || '').trim();
     const obs = String(dados.get('obs') || '').trim();
     const n = contarNoites();
@@ -344,6 +372,7 @@ const semanaNomes = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta'
     let pessoas = plural(adultos, 'adulto', 'adultos');
     if (criancas > 0) pessoas += ` e ${plural(criancas, 'criança', 'crianças')}`;
     linhas.push(`👥 ${pessoas}`);
+    faixas.forEach((f) => linhas.push(`   • ${f.qtd} ${f.faixa}`));
     linhas.push(`🏠 Apartamento: ${dados.get('apto')}`);
     if (nome) linhas.push(`🙋 Nome: ${nome}`);
     if (obs) linhas.push(`📝 Obs.: ${obs}`);
@@ -358,6 +387,26 @@ const semanaNomes = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta'
     noites.classList.toggle('agenda__noites--ok', Boolean(n));
     previa.textContent = montarMensagem();
   }
+
+  // contadores de hóspedes (− / +)
+  form.querySelectorAll<HTMLDivElement>('.contador').forEach((c) => {
+    const campo = c.querySelector<HTMLInputElement>('input')!;
+    const [menos, mais] = c.querySelectorAll<HTMLButtonElement>('.contador__btn');
+    const ajustar = () => {
+      const v = Number(campo.value);
+      menos.disabled = v <= Number(campo.min);
+      mais.disabled = v >= Number(campo.max);
+    };
+    c.querySelectorAll<HTMLButtonElement>('.contador__btn').forEach((b) =>
+      b.addEventListener('click', () => {
+        const v = Number(campo.value) + Number(b.dataset.passo);
+        campo.value = String(Math.min(Number(campo.max), Math.max(Number(campo.min), v)));
+        ajustar();
+        atualizar();
+      }),
+    );
+    ajustar();
+  });
 
   form.addEventListener('input', atualizar);
   form.addEventListener('change', atualizar);
@@ -724,6 +773,85 @@ const semanaNomes = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta'
   .pilula input:focus-visible + span {
     outline: 3px solid var(--hibisco);
     outline-offset: 2px;
+  }
+
+  /* ---------- Hóspedes (contadores) ---------- */
+  .hospedes {
+    gap: 0;
+  }
+  .hospedes .campo__rotulo {
+    margin-bottom: 0.4rem;
+  }
+  .contador {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-block: 0.7rem;
+    border-bottom: 1px solid #e3ecef;
+  }
+  .contador:last-child {
+    border-bottom: 0;
+    padding-bottom: 0;
+  }
+  .contador__nome {
+    font-weight: 700;
+    color: var(--ink);
+  }
+  .contador__controle {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    flex: none;
+  }
+  .contador__btn {
+    display: grid;
+    place-items: center;
+    width: 2.4rem;
+    height: 2.4rem;
+    padding: 0;
+    border: 1.5px solid #c9dadf;
+    border-radius: 50%;
+    background: #fff;
+    color: var(--sea);
+    cursor: pointer;
+    transition: background-color 0.15s, border-color 0.15s;
+  }
+  .contador__btn:hover:not(:disabled) {
+    background: var(--sky);
+    border-color: var(--sea);
+  }
+  .contador__btn:disabled {
+    opacity: 0.35;
+    cursor: default;
+  }
+  .contador__btn svg {
+    width: 1rem;
+    height: 1rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.4;
+    stroke-linecap: round;
+  }
+  .hospedes .contador input {
+    width: 2.4rem;
+    min-width: 0;
+    min-height: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    text-align: center;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--sea);
+    -moz-appearance: textfield;
+    appearance: textfield;
+    pointer-events: none;
+  }
+  .hospedes .contador input::-webkit-inner-spin-button,
+  .hospedes .contador input::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
   }
 
   .agenda__erro {
