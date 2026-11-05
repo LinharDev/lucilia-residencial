@@ -32,8 +32,8 @@ import capa3 from '../assets/videos/apto-3-quartos.jpg';
 const apartamentos = [
   {
     quartos: '1 quarto',
-    para: 'Para casais e famílias pequenas',
-    texto: 'Apartamento completo com sala, cozinha equipada, ar-condicionado e Wi-Fi. Também temos kitinetes para 2 pessoas.',
+    para: 'Para casal ou até 2 pessoas',
+    texto: 'Apartamento completo com cozinha equipada, ar-condicionado e Wi-Fi. Também temos kitinetes para 2 pessoas.',
     video: '/videos/apto-1-quarto.mp4',
     capa: capa1,
     duracao: '30 s',
@@ -201,6 +201,7 @@ const comodidades = [
                 <figure class="apto__video">
                   <video
                     controls
+                    muted
                     playsinline
                     preload="none"
                     poster={a.capaUrl}
