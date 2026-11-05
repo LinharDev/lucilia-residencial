@@ -6,17 +6,25 @@ import WhatsIcon from '../components/WhatsIcon.astro';
 import CalendarIcon from '../components/CalendarIcon.astro';
 import Reserva from '../components/Reserva.astro';
 import Avaliacoes from '../components/Avaliacoes.astro';
-import { site, whatsappUrl } from '../data/site';
+import PorDentro from '../components/PorDentro.astro';
+import Banner from '../components/Banner.astro';
+import Praias from '../components/Praias.astro';
+import { whatsappUrl } from '../data/site';
+import { site } from '../data/site';
 
 import fachada from '../assets/fotos/fachada-hibiscos.jpg';
 import praia from '../assets/fotos/praia-pinheira.jpg';
-import patio from '../assets/fotos/patio-residencial.jpg';
 import suculentas from '../assets/fotos/muro-suculentas.jpg';
-import escadas from '../assets/fotos/fachada-escadas.jpg';
-import hibiscos from '../assets/fotos/hibiscos-patio.jpg';
 import porDoSol from '../assets/fotos/por-do-sol-pinheira.jpg';
 import passarela from '../assets/fotos/passarela-praia.jpg';
-import entardecer from '../assets/fotos/entardecer-pinheira.jpg';
+import areaDescanso from '../assets/fotos/area-descanso.jpg';
+import patioHibiscos from '../assets/fotos/patio-hibiscos.jpg';
+import escadasJardim from '../assets/fotos/escadas-jardim.jpg';
+import palmeira from '../assets/fotos/palmeira-patio.jpg';
+import estacionamentoHibiscos from '../assets/fotos/estacionamento-hibiscos.jpg';
+import estacionamento from '../assets/fotos/estacionamento.jpg';
+import fachada108 from '../assets/fotos/fachada-108.jpg';
+import aguaCristalina from '../assets/fotos/agua-cristalina.jpg';
 
 const apartamentos = [
   {
@@ -38,14 +46,18 @@ const apartamentos = [
 
 const fotos = [
   { src: fachada, alt: 'Fachada do residencial, com portas de madeira numeradas e hibiscos rosa em primeiro plano' },
+  { src: areaDescanso, alt: 'Área de descanso com bancos de madeira, grama e plantas' },
   { src: praia, alt: 'Praia da Pinheira em dia de sol, com pedras na beira da água e o morro ao fundo' },
-  { src: patio, alt: 'Pátio interno com os prédios do residencial e garagem coberta' },
-  { src: suculentas, alt: 'Muro branco decorado com vasos de suculentas e plaquinhas escritas Paz, Amor e Paraíso' },
-  { src: escadas, alt: 'Escadas externas que levam aos apartamentos do andar de cima' },
-  { src: hibiscos, alt: 'Hibiscos floridos na entrada do residencial' },
+  { src: patioHibiscos, alt: 'Pátio interno com hibiscos floridos e os apartamentos ao fundo' },
+  { src: escadasJardim, alt: 'Escadas externas e jardim com plantas tropicais' },
+  { src: aguaCristalina, alt: 'Água cristalina com pedras no fundo, na região da Pinheira' },
+  { src: palmeira, alt: 'Palmeira e flores no pátio do residencial' },
+  { src: fachada108, alt: 'Entrada de um dos apartamentos, com churrasqueira e ar-condicionado' },
   { src: porDoSol, alt: 'Pôr do sol na areia da Praia da Pinheira' },
+  { src: suculentas, alt: 'Muro branco decorado com vasos de suculentas e plaquinhas escritas Paz, Amor e Paraíso' },
+  { src: estacionamentoHibiscos, alt: 'Hibiscos floridos ao lado do estacionamento' },
+  { src: estacionamento, alt: 'Estacionamento do residencial com piso de lajotas e jardim' },
   { src: passarela, alt: 'Passarela de madeira chegando à areia, com mar e ilhas ao fundo' },
-  { src: entardecer, alt: 'Entardecer cor-de-rosa na Praia da Pinheira' },
 ];
 
 const fotosGaleria = await Promise.all(
@@ -54,14 +66,6 @@ const fotosGaleria = await Promise.all(
     full: (await getImage({ src: f.src, width: Math.min(f.src.width, 1400), format: 'webp' })).src,
   })),
 );
-
-const arredores = [
-  { nome: 'Praia da Pinheira', texto: 'A 250 metros. Baía de mar calmo, boa para criança e para caminhar na areia no fim da tarde.' },
-  { nome: 'Praia do Sonho', texto: 'Vizinha da Pinheira, com areia clara e mar tranquilo.' },
-  { nome: 'Ponta do Papagaio', texto: 'Praia pequena, cercada de mata e com água clara.' },
-  { nome: 'Guarda do Embaú', texto: 'Onde o rio encontra o mar. Famosa pelo surfe e pelas trilhas.' },
-  { nome: 'Praia de Cima', texto: 'Mar aberto e areia extensa, para quem quer mais espaço.' },
-];
 
 const comodidades = [
   '250 m da Praia da Pinheira',
@@ -84,7 +88,7 @@ const comodidades = [
           <li><a href="#apartamentos">Apartamentos</a></li>
           <li><a href="#fotos">Fotos</a></li>
           <li><a href="#avaliacoes">Avaliações</a></li>
-          <li><a href="#como-chegar">Como chegar</a></li>
+          <li><a href="#como-chegar">Praias</a></li>
         </ul>
       </nav>
       <a class="btn btn--solid topo__cta" href="#reservar">Reservar</a>
@@ -96,9 +100,9 @@ const comodidades = [
     <section class="hero">
       <div class="wrap hero__grid">
         <div class="hero__texto">
-          <h1>Seu refúgio a 250&nbsp;metros da Praia da Pinheira.</h1>
+          <h1>Seu refúgio a 250&nbsp;metros do mar, na Praia da Pinheira.</h1>
           <p class="lede">
-            Apartamentos por temporada de 1, 2 e 3 quartos em Palhoça, SC. Aberto o ano todo.
+            Apartamentos por temporada de 1, 2 e 3 quartos na Praia da Pinheira, SC. Estamos abertos o ano todo.
           </p>
           <div class="hero__acoes">
             <a class="btn btn--solid" href="#reservar"><CalendarIcon /> Escolher datas</a>
@@ -159,7 +163,8 @@ const comodidades = [
         <div class="secao__topo">
           <h2>Apartamentos</h2>
           <p class="lede">
-            Todas as unidades são completas: é só chegar com a mala. Escolha o tamanho certo para quem vem com você.
+            Todas as unidades são completas: é só chegar com a mala. Escolha o apartamento ideal para você, sua família ou
+            seus amigos.
           </p>
         </div>
 
@@ -175,6 +180,8 @@ const comodidades = [
           }
         </ul>
 
+        <PorDentro />
+
         <div class="aptos__nota">
           <p>Valores de diárias conforme o número de pessoas e o período.</p>
           <a class="btn btn--solid" href="#reservar"><CalendarIcon /> Consultar datas e valores</a>
@@ -186,8 +193,8 @@ const comodidades = [
     <section class="secao lugar">
       <div class="wrap lugar__grid">
         <div class="lugar__fotos">
-          <Image class="lugar__f1" src={patio} alt="Pátio interno do residencial com garagem coberta" widths={[480, 640]} sizes="(min-width: 960px) 34vw, 90vw" />
-          <Image class="lugar__f2" src={suculentas} alt="Muro decorado com suculentas e plaquinhas de praia" widths={[320, 480]} sizes="(min-width: 960px) 18vw, 45vw" />
+          <Image class="lugar__f1" src={areaDescanso} alt="Área de descanso com bancos de madeira, grama e plantas" widths={[480, 800, 1100]} sizes="(min-width: 960px) 34vw, 90vw" />
+          <Image class="lugar__f2" src={patioHibiscos} alt="Pátio com hibiscos floridos e os apartamentos ao fundo" widths={[320, 480, 640]} sizes="(min-width: 960px) 18vw, 45vw" />
         </div>
         <div class="lugar__texto">
           <h2>Conforto de casa, a poucos passos do mar</h2>
@@ -212,6 +219,9 @@ const comodidades = [
 
     <!-- AVALIAÇÕES (ao vivo, via Google Maps) -->
     <Avaliacoes />
+
+    <!-- FAIXA COM FOTO -->
+    <Banner />
 
     <!-- FOTOS -->
     <section id="fotos" class="secao fotos">
@@ -257,40 +267,7 @@ const comodidades = [
     </section>
 
     <!-- COMO CHEGAR / ARREDORES -->
-    <section id="como-chegar" class="secao arredores">
-      <div class="wrap">
-        <div class="secao__topo">
-          <h2>Praia da Pinheira e arredores</h2>
-          <p class="lede">
-            A Pinheira fica no sul de Palhoça, na Grande Florianópolis. Daqui dá para conhecer algumas das praias mais
-            bonitas de Santa Catarina sem pegar estrada longa.
-          </p>
-        </div>
-        <div class="arredores__grid">
-          <ul class="hex-list arredores__lista">
-            {
-              arredores.map((a) => (
-                <li>
-                  <h3>{a.nome}</h3>
-                  <p>{a.texto}</p>
-                </li>
-              ))
-            }
-          </ul>
-          <div class="arredores__mapa">
-            <iframe
-              title="Mapa do Lucília Residencial na Praia da Pinheira, Palhoça, SC"
-              src={site.mapsEmbed}
-              loading="lazy"
-              referrerpolicy="no-referrer-when-downgrade"></iframe>
-            <p class="arredores__obs">
-              {site.street}, {site.district}, {site.city} - SC, CEP {site.postalCode}.
-              <a href={site.mapsUrl} target="_blank" rel="noopener">Abrir no Google Maps</a>
-            </p>
-          </div>
-        </div>
-      </div>
-    </section>
+    <Praias />
 
     <!-- RESERVA -->
     <Reserva />
@@ -372,11 +349,11 @@ const comodidades = [
     display: flex;
     align-items: center;
     gap: 2rem;
-    min-height: 4.5rem;
+    min-height: clamp(4.75rem, 9vw, 5.5rem);
   }
   .topo__logo {
     text-decoration: none;
-    font-size: 1.05rem;
+    font-size: clamp(1.3rem, 3.5vw, 1.55rem);
   }
   .topo nav {
     margin-left: auto;
@@ -850,52 +827,6 @@ const comodidades = [
     }
     .lightbox__prox {
       right: 0;
-    }
-  }
-
-  /* Arredores */
-  .arredores {
-    background: var(--sky);
-  }
-  .arredores__grid {
-    display: grid;
-    gap: 2.5rem;
-  }
-  .arredores__lista {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: grid;
-    gap: 1.5rem;
-  }
-  .arredores__lista li::before {
-    top: 0.75em;
-  }
-  .arredores__lista h3 {
-    margin-bottom: 0.25rem;
-  }
-  .arredores__lista p {
-    color: var(--ink-soft);
-    max-width: 32rem;
-  }
-  .arredores__mapa iframe {
-    display: block;
-    width: 100%;
-    aspect-ratio: 4 / 3;
-    border: 0;
-    border-radius: var(--radius-photo);
-    background: #d4e7ec;
-  }
-  .arredores__obs {
-    margin-top: 0.75rem;
-    font-size: 0.9rem;
-    color: var(--ink-soft);
-  }
-  @media (min-width: 960px) {
-    .arredores__grid {
-      grid-template-columns: 1fr 1.2fr;
-      gap: 4rem;
-      align-items: start;
     }
   }
 

@@ -1,0 +1,161 @@
+---
+import { Image } from 'astro:assets';
+import quartoCasal from '../assets/interior/quarto-casal.jpg';
+import quartoGuardaRoupa from '../assets/interior/quarto-guarda-roupa.jpg';
+import quartoSolteiro from '../assets/interior/quarto-solteiro.jpg';
+import salaEstar from '../assets/interior/sala-estar.jpg';
+import salaJantar from '../assets/interior/sala-jantar.jpg';
+import cozinha from '../assets/interior/cozinha.jpg';
+import churrasqueira from '../assets/interior/churrasqueira.jpg';
+import entrada from '../assets/interior/entrada-churrasqueira.jpg';
+
+// Fotos publicadas pela pousada no perfil do Google Maps
+const fotos = [
+  { src: quartoCasal, legenda: 'Quarto de casal com ar-condicionado', alt: 'Quarto com cama de casal, ar-condicionado e janela' },
+  { src: salaEstar, legenda: 'Sala de estar', alt: 'Sala com sofás e mesa de jantar' },
+  { src: cozinha, legenda: 'Cozinha equipada', alt: 'Cozinha com fogão, geladeira, micro-ondas e armários' },
+  { src: quartoGuardaRoupa, legenda: 'Quarto com guarda-roupa', alt: 'Quarto com cama, guarda-roupa de madeira e ar-condicionado' },
+  { src: salaJantar, legenda: 'Sala com mesa de jantar', alt: 'Sala com TV, mesa de jantar e sofás' },
+  { src: churrasqueira, legenda: 'Churrasqueira individual na entrada', alt: 'Entrada do apartamento com churrasqueira de alvenaria ao lado da porta' },
+  { src: quartoSolteiro, legenda: 'Quarto com camas de solteiro', alt: 'Quarto com camas de solteiro' },
+  { src: entrada, legenda: 'Área externa com pia e churrasqueira', alt: 'Entrada do apartamento com pia, bancada e churrasqueira' },
+];
+---
+
+<div class="dentro">
+  <div class="dentro__topo">
+    <h3 class="dentro__titulo">Por dentro dos apartamentos</h3>
+    <div class="dentro__nav">
+      <button type="button" class="dentro__btn" data-dir="-1" aria-label="Fotos anteriores">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"></path></svg>
+      </button>
+      <button type="button" class="dentro__btn" data-dir="1" aria-label="Próximas fotos">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"></path></svg>
+      </button>
+    </div>
+  </div>
+  <ul class="dentro__trilho" tabindex="0" aria-label="Fotos do interior dos apartamentos">
+    {
+      fotos.map((f) => (
+        <li class="dentro__item">
+          <figure>
+            <Image src={f.src} alt={f.alt} widths={[480, 720, 960]} sizes="(min-width: 960px) 30vw, (min-width: 600px) 45vw, 82vw" />
+            <figcaption>{f.legenda}</figcaption>
+          </figure>
+        </li>
+      ))
+    }
+  </ul>
+</div>
+
+<script>
+  document.querySelectorAll<HTMLElement>('.dentro').forEach((bloco) => {
+    const trilho = bloco.querySelector<HTMLUListElement>('.dentro__trilho')!;
+    const [ant, prox] = bloco.querySelectorAll<HTMLButtonElement>('.dentro__btn');
+    const atualizar = () => {
+      ant.disabled = trilho.scrollLeft <= 4;
+      prox.disabled = trilho.scrollLeft + trilho.clientWidth >= trilho.scrollWidth - 4;
+    };
+    bloco.querySelectorAll<HTMLButtonElement>('.dentro__btn').forEach((b) =>
+      b.addEventListener('click', () => {
+        const item = trilho.querySelector<HTMLElement>('.dentro__item')!;
+        const passo = item.offsetWidth + parseFloat(getComputedStyle(trilho).columnGap || '0');
+        trilho.scrollBy({ left: passo * Number(b.dataset.dir), behavior: 'smooth' });
+      }),
+    );
+    trilho.addEventListener('scroll', atualizar, { passive: true });
+    window.addEventListener('resize', atualizar);
+    atualizar();
+  });
+</script>
+
+<style>
+  .dentro {
+    margin-top: clamp(3rem, 6vw, 4.5rem);
+  }
+  .dentro__topo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+  }
+  .dentro__titulo {
+    font-size: clamp(1.9rem, 4vw, 2.5rem);
+  }
+  .dentro__nav {
+    display: flex;
+    gap: 0.5rem;
+  }
+  .dentro__btn {
+    display: grid;
+    place-items: center;
+    width: 2.9rem;
+    height: 2.9rem;
+    border: 1.5px solid var(--sea);
+    border-radius: 50%;
+    background: #fff;
+    color: var(--sea);
+    cursor: pointer;
+    transition: background-color 0.15s, color 0.15s;
+  }
+  .dentro__btn:hover:not(:disabled) {
+    background: var(--sea);
+    color: #fff;
+  }
+  .dentro__btn:disabled {
+    opacity: 0.3;
+    cursor: default;
+  }
+  .dentro__btn svg {
+    width: 1.2rem;
+    height: 1.2rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .dentro__trilho {
+    list-style: none;
+    margin: 0;
+    padding: 0 0 0.75rem;
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 82%;
+    gap: 1rem;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: thin;
+    scrollbar-color: var(--peach) transparent;
+  }
+  @media (min-width: 600px) {
+    .dentro__trilho {
+      grid-auto-columns: calc((100% - 1rem) / 2);
+    }
+  }
+  @media (min-width: 960px) {
+    .dentro__trilho {
+      grid-auto-columns: calc((100% - 2.5rem) / 3);
+      gap: 1.25rem;
+    }
+  }
+  .dentro__item {
+    scroll-snap-align: start;
+  }
+  .dentro__item figure {
+    margin: 0;
+  }
+  .dentro__item img {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    border-radius: var(--radius-photo);
+  }
+  .dentro__item figcaption {
+    margin-top: 0.6rem;
+    font-weight: 700;
+    color: var(--sea);
+  }
+</style>
