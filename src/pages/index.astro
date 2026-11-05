@@ -25,24 +25,43 @@ import estacionamentoHibiscos from '../assets/fotos/estacionamento-hibiscos.jpg'
 import estacionamento from '../assets/fotos/estacionamento.jpg';
 import fachada108 from '../assets/fotos/fachada-108.jpg';
 import aguaCristalina from '../assets/fotos/agua-cristalina.jpg';
+import capa1 from '../assets/videos/apto-1-quarto.jpg';
+import capa2 from '../assets/videos/apto-2-quartos.jpg';
+import capa3 from '../assets/videos/apto-3-quartos.jpg';
 
 const apartamentos = [
   {
     quartos: '1 quarto',
-    para: 'Para casal ou até 2 pessoas',
-    texto: 'Kitinete completa, com cozinha equipada, ar-condicionado e Wi-Fi. Boa para um fim de semana ou para trabalhar de casa perto do mar.',
+    para: 'Para casais e famílias pequenas',
+    texto: 'Apartamento completo com sala, cozinha equipada, ar-condicionado e Wi-Fi. Também temos kitinetes para 2 pessoas.',
+    video: '/videos/apto-1-quarto.mp4',
+    capa: capa1,
+    duracao: '30 s',
   },
   {
     quartos: '2 quartos',
     para: 'Para famílias',
     texto: 'Apartamento completo com cozinha, ar-condicionado, Wi-Fi e churrasqueira individual.',
+    video: '/videos/apto-2-quartos.mp4',
+    capa: capa2,
+    duracao: '30 s',
   },
   {
     quartos: '3 quartos',
     para: 'Para famílias grandes e grupos de amigos',
     texto: 'O maior apartamento do residencial: espaço para todo mundo, cozinha completa e churrasqueira individual.',
+    video: '/videos/apto-3-quartos.mp4',
+    capa: capa3,
+    duracao: '50 s',
   },
 ];
+
+const apartamentosComCapa = await Promise.all(
+  apartamentos.map(async (a) => ({
+    ...a,
+    capaUrl: (await getImage({ src: a.capa, width: 480, format: 'webp' })).src,
+  })),
+);
 
 const fotos = [
   { src: fachada, alt: 'Fachada do residencial, com portas de madeira numeradas e hibiscos rosa em primeiro plano' },
@@ -170,11 +189,29 @@ const comodidades = [
 
         <ul class="aptos__lista">
           {
-            apartamentos.map((a) => (
+            apartamentosComCapa.map((a) => (
               <li class="apto">
-                <h3 class="apto__quartos">{a.quartos}</h3>
-                <p class="apto__para">{a.para}</p>
-                <p class="apto__texto">{a.texto}</p>
+                <div class="apto__info">
+                  <h3 class="apto__quartos">{a.quartos}</h3>
+                  <div class="apto__desc">
+                    <p class="apto__para">{a.para}</p>
+                    <p class="apto__texto">{a.texto}</p>
+                  </div>
+                </div>
+                <figure class="apto__video">
+                  <video
+                    controls
+                    playsinline
+                    preload="none"
+                    poster={a.capaUrl}
+                    width="480"
+                    height="850"
+                    aria-label={`Vídeo do apartamento de ${a.quartos}`}
+                  >
+                    <source src={a.video} type="video/mp4" />
+                  </video>
+                  <figcaption>Vídeo do apartamento de {a.quartos} ({a.duracao})</figcaption>
+                </figure>
               </li>
             ))
           }
@@ -324,6 +361,10 @@ const comodidades = [
     if (e.key === 'ArrowRight') mostrar(atual + 1);
   });
   dialog.addEventListener('close', () => origem?.focus());
+
+  // Vídeos dos apartamentos: ao dar play em um, pausa os outros
+  const videos = [...document.querySelectorAll<HTMLVideoElement>('.apto__video video')];
+  videos.forEach((v) => v.addEventListener('play', () => videos.forEach((o) => o !== v && o.pause())));
 </script>
 
 <style>
@@ -610,9 +651,53 @@ const comodidades = [
   }
   .apto {
     display: grid;
-    gap: 0.4rem 2rem;
-    padding: 1.75rem 0;
+    gap: 1.5rem 3rem;
+    padding: 2rem 0;
     border-bottom: 1px solid var(--peach);
+  }
+  .apto__info {
+    display: grid;
+    gap: 0.4rem 2rem;
+    align-content: center;
+  }
+  .apto__desc {
+    display: grid;
+    gap: 0.4rem;
+  }
+  .apto__video {
+    margin: 0;
+    width: min(100%, 17rem);
+  }
+  .apto__video video {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 9 / 16;
+    object-fit: cover;
+    border-radius: var(--radius-photo);
+    background: var(--sky);
+    box-shadow: 0 1.5rem 2.5rem -1.75rem rgb(14 77 94 / 0.5);
+  }
+  .apto__video figcaption {
+    margin-top: 0.6rem;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--sea);
+  }
+  @media (min-width: 760px) {
+    .apto {
+      grid-template-columns: minmax(0, 1fr) 15rem;
+      align-items: center;
+    }
+    .apto__video {
+      width: 100%;
+    }
+  }
+  @media (min-width: 960px) {
+    .apto__info {
+      grid-template-columns: 14rem minmax(0, 1fr);
+      align-items: baseline;
+    }
   }
   .apto__quartos {
     font-size: clamp(2.5rem, 6vw, 3.75rem);
@@ -625,19 +710,6 @@ const comodidades = [
   .apto__texto {
     color: var(--ink-soft);
     max-width: 34rem;
-  }
-  @media (min-width: 760px) {
-    .apto {
-      grid-template-columns: 15rem 1fr;
-      align-items: baseline;
-    }
-    .apto__para,
-    .apto__texto {
-      grid-column: 2;
-    }
-    .apto__quartos {
-      grid-row: 1 / span 2;
-    }
   }
   .aptos__nota {
     display: flex;
