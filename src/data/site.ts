@@ -2,7 +2,7 @@ export const site = {
   name: 'Lucília Residencial',
   url: 'https://residenciallucilia.com.br',
   description:
-    'Apartamentos por temporada de 1, 2 e 3 quartos a 250 metros da Praia da Pinheira, em Palhoça, SC. Ar-condicionado, Wi-Fi e garagem coberta. Aberto o ano todo.',
+    'Pousada com apartamentos por temporada de 1, 2 e 3 quartos a 250 m da Praia da Pinheira, em Palhoça (SC), perto da Guarda do Embaú. Ar, Wi-Fi e garagem.',
   phoneDisplay: '(51) 98907-8845',
   phoneE164: '+5551989078845',
   instagram: 'https://www.instagram.com/luciliaresidencial/',
