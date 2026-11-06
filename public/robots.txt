@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://residenciallucilia.com.br/sitemap.xml

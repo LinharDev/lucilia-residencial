@@ -2,5 +2,5 @@
 import { defineConfig } from 'astro/config';
 
 export default defineConfig({
-  site: 'https://lucilia-residencial-pinheira.vercel.app',
+  site: 'https://residenciallucilia.com.br',
 });
